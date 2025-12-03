@@ -1,0 +1,6 @@
+overrides:
+  '@metamask/sdk-communication-layer@>=0.16.0 <=0.33.0': '>=0.33.1'
+  '@metamask/sdk@>=0.16.0 <=0.33.0': '>=0.33.1'
+  axios@>=1.0.0 <1.12.0: '>=1.12.0'
+  valibot@>=0.31.0 <1.2.0: '>=1.2.0'
+  '@modelcontextprotocol/sdk@<1.24.0': '>=1.24.0'
