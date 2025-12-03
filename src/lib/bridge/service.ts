@@ -28,7 +28,10 @@ import type { SupportedChainId } from "./networks";
 import { getAdapterFactory, type AdapterFactory } from "./adapters/factory";
 import { getBalanceService, type BalanceService } from "./balance/service";
 import type { TokenBalance } from "./balance/service";
-import { getAttestationTime, getAttestationTimeDisplay } from "./attestation-times";
+import {
+  getAttestationTime,
+  getAttestationTimeDisplay,
+} from "./attestation-times";
 
 /**
  * Bridge service configuration
@@ -95,7 +98,9 @@ export class CCTPBridgeService implements IBridgeService {
     // Clear adapter cache for previous wallet
     this.adapterFactory.clearCache();
 
-    console.log(`Bridge service initialized for ${this.userAddress} with ${this.wallets.length} wallet(s)`);
+    console.log(
+      `Bridge service initialized for ${this.userAddress} with ${this.wallets.length} wallet(s)`,
+    );
   }
 
   /**
@@ -124,12 +129,15 @@ export class CCTPBridgeService implements IBridgeService {
 
     if (!compatibleWallet) {
       throw new Error(
-        `No compatible wallet connected for ${network.type} network. Please connect a ${network.type.toUpperCase()} wallet first.`
+        `No compatible wallet connected for ${network.type} network. Please connect a ${network.type.toUpperCase()} wallet first.`,
       );
     }
 
     try {
-      return await this.adapterFactory.getAdapter(compatibleWallet, network.type);
+      return await this.adapterFactory.getAdapter(
+        compatibleWallet,
+        network.type,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to get adapter for ${chain}: ${message}`);
@@ -173,6 +181,8 @@ export class CCTPBridgeService implements IBridgeService {
         },
         amount: params.amount,
       });
+
+      console.log("ESTIMATE--------; ", estimate);
 
       // Process the estimate result
       const gasFee = estimate.gasFees[0];

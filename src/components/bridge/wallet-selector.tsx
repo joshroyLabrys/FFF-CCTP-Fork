@@ -111,9 +111,11 @@ export function WalletSelector({
 
   return (
     <div className="relative space-y-2" ref={dropdownRef}>
-      <label className="text-sm font-medium text-muted-foreground">
-        {label}
-      </label>
+      {label && (
+        <label className="text-sm font-medium text-muted-foreground">
+          {label}
+        </label>
+      )}
 
       <motion.button
         onClick={() => setIsOpen(!isOpen)}

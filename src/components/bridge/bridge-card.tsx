@@ -8,6 +8,7 @@ import { SwapButton } from "./swap-button";
 import { DestinationAddressInput } from "./destination-address-input";
 import { WalletSelector } from "./wallet-selector";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
 import {
@@ -206,30 +207,81 @@ export function BridgeCard() {
             excludeChainId={fromChain}
           />
 
-          {/* Destination Wallet Selector */}
-          {toChain && destWallets.length > 0 && !useCustomAddress && (
-            <WalletSelector
-              wallets={destWallets}
-              selectedWalletId={selectedDestWalletId}
-              onSelectWallet={handleSelectDestWallet}
-              label="Destination Wallet"
-              networkType={NETWORK_CONFIGS[toChain]?.type ?? "evm"}
-            />
-          )}
-
-          {/* Destination Address Input */}
+          {/* Unified Destination Wallet/Address Component */}
           {toChain && toNetworkType && (
-            <DestinationAddressInput
-              networkType={toNetworkType}
-              value={customAddress}
-              onChange={setCustomAddress}
-              onValidationChange={setIsAddressValid}
-              useCustomAddress={useCustomAddress}
-              onToggleCustomAddress={setUseCustomAddress}
-              connectedWalletAddress={
-                selectedDestWallet?.address ?? destWallet?.address
-              }
-            />
+            <div className="relative z-10 space-y-2">
+              {/* Label with checkbox toggle */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-muted-foreground">
+                  Destination Wallet
+                </label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="custom-address"
+                    checked={useCustomAddress}
+                    onCheckedChange={(checked) => setUseCustomAddress(checked === true)}
+                  />
+                  <label
+                    htmlFor="custom-address"
+                    className="text-xs font-medium leading-none cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Use custom address
+                  </label>
+                </div>
+              </div>
+
+              {/* Stacked cards animation wrapper */}
+              <div className="relative" style={{ perspective: "1000px" }}>
+                <motion.div
+                  key={useCustomAddress ? "custom-input" : "wallet-selector"}
+                  initial={{
+                    rotateY: -90,
+                    opacity: 0,
+                    scale: 0.9,
+                  }}
+                  animate={{
+                    rotateY: 0,
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  exit={{
+                    rotateY: 90,
+                    opacity: 0,
+                    scale: 0.9,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.34, 1.56, 0.64, 1],
+                  }}
+                  style={{
+                    transformStyle: "preserve-3d",
+                  }}
+                >
+                  {useCustomAddress ? (
+                    <DestinationAddressInput
+                      networkType={toNetworkType}
+                      value={customAddress}
+                      onChange={setCustomAddress}
+                      onValidationChange={setIsAddressValid}
+                      useCustomAddress={useCustomAddress}
+                      onToggleCustomAddress={setUseCustomAddress}
+                      connectedWalletAddress={
+                        selectedDestWallet?.address ?? destWallet?.address
+                      }
+                    />
+                  ) : (
+                    <WalletSelector
+                      wallets={destWallets}
+                      selectedWalletId={selectedDestWalletId}
+                      onSelectWallet={handleSelectDestWallet}
+                      label=""
+                      networkType={NETWORK_CONFIGS[toChain]?.type ?? "evm"}
+                      placeholder="Select destination wallet"
+                    />
+                  )}
+                </motion.div>
+              </div>
+            </div>
           )}
 
           {/* Destination Wallet Warning */}
@@ -317,7 +369,7 @@ export function BridgeCard() {
               {isEstimating
                 ? "..."
                 : estimate
-                  ? `$${parseFloat(estimate.fees.total)}`
+                  ? `$${estimate.fees.total}`
                   : "~$2.50"}
             </span>
           </div>
