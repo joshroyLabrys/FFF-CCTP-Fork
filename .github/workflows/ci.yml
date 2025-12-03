@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup and install
+        uses: ./.github/actions/setup
+
       - name: Copy env
         shell: bash
         run: cp .env.example .env
@@ -36,6 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup and install
+        uses: ./.github/actions/setup
+
       - name: Format
         run: pnpm format:check
 
@@ -43,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup and install
+        uses: ./.github/actions/setup
 
       - name: Copy env
         shell: bash
