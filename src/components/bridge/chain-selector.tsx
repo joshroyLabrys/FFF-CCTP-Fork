@@ -4,58 +4,18 @@ import { motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "~/lib/utils";
-
-export type Chain = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-};
-
-const SUPPORTED_CHAINS: Chain[] = [
-  {
-    id: "ethereum",
-    name: "Ethereum",
-    icon: "⟠",
-    color: "from-blue-500/20 to-blue-600/20",
-  },
-  {
-    id: "arbitrum",
-    name: "Arbitrum",
-    icon: "◆",
-    color: "from-cyan-500/20 to-blue-500/20",
-  },
-  {
-    id: "optimism",
-    name: "Optimism",
-    icon: "◉",
-    color: "from-red-500/20 to-pink-500/20",
-  },
-  {
-    id: "polygon",
-    name: "Polygon",
-    icon: "⬡",
-    color: "from-purple-500/20 to-violet-600/20",
-  },
-  {
-    id: "base",
-    name: "Base",
-    icon: "◐",
-    color: "from-blue-600/20 to-indigo-600/20",
-  },
-  {
-    id: "avalanche",
-    name: "Avalanche",
-    icon: "▲",
-    color: "from-red-600/20 to-orange-500/20",
-  },
-];
+import {
+  NETWORK_CONFIGS,
+  getNetworksByEnvironment,
+  useEnvironment,
+  type SupportedChainId,
+} from "~/lib/bridge";
 
 interface ChainSelectorProps {
-  selectedChain: Chain;
-  onSelectChain: (chain: Chain) => void;
+  selectedChain: SupportedChainId | null;
+  onSelectChain: (chain: SupportedChainId) => void;
   label: string;
-  excludeChainId?: string;
+  excludeChainId?: SupportedChainId | null;
 }
 
 export function ChainSelector({
@@ -65,10 +25,13 @@ export function ChainSelector({
   excludeChainId,
 }: ChainSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const environment = useEnvironment();
 
-  const availableChains = SUPPORTED_CHAINS.filter(
+  const availableChains = getNetworksByEnvironment(environment).filter(
     (chain) => chain.id !== excludeChainId,
   );
+
+  const selected = selectedChain ? NETWORK_CONFIGS[selectedChain] : null;
 
   return (
     <div className="relative">
@@ -86,24 +49,32 @@ export function ChainSelector({
         whileTap={{ scale: 0.99 }}
       >
         <div className="flex items-center gap-3 p-4">
-          <motion.div
-            className={cn(
-              "flex size-10 items-center justify-center rounded-xl bg-gradient-to-br text-xl font-bold",
-              selectedChain.color,
-            )}
-            whileHover={{ rotate: 5 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            {selectedChain.icon}
-          </motion.div>
-          <div className="flex-1 text-left">
-            <div className="text-sm font-medium text-foreground">
-              {selectedChain.name}
+          {selected ? (
+            <>
+              <motion.div
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-xl bg-gradient-to-br text-xl font-bold",
+                  selected.color,
+                )}
+                whileHover={{ rotate: 5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                {selected.icon}
+              </motion.div>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-medium text-foreground">
+                  {selected.displayName}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  USDC on {selected.name}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 text-left text-sm text-muted-foreground">
+              Select network
             </div>
-            <div className="text-xs text-muted-foreground">
-              USDC on {selectedChain.name}
-            </div>
-          </div>
+          )}
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
@@ -137,13 +108,13 @@ export function ChainSelector({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
                   onClick={() => {
-                    onSelectChain(chain);
+                    onSelectChain(chain.id);
                     setIsOpen(false);
                   }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl p-3 transition-all",
                     "hover:bg-accent/50",
-                    selectedChain.id === chain.id && "bg-accent/30",
+                    selectedChain === chain.id && "bg-accent/30",
                   )}
                   whileHover={{ x: 4 }}
                   whileTap={{ scale: 0.98 }}
@@ -158,7 +129,7 @@ export function ChainSelector({
                   </div>
                   <div className="flex-1 text-left">
                     <div className="text-sm font-medium text-foreground">
-                      {chain.name}
+                      {chain.displayName}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       USDC on {chain.name}
@@ -174,5 +145,4 @@ export function ChainSelector({
   );
 }
 
-export { SUPPORTED_CHAINS };
 

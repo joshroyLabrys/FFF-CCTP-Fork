@@ -1,0 +1,205 @@
+"use client";
+
+import { motion, AnimatePresence } from "motion/react";
+import { Check, ChevronDown, Wallet } from "lucide-react";
+import { cn } from "~/lib/utils";
+import { useState, useRef, useEffect } from "react";
+import type { NetworkType } from "~/lib/bridge/networks";
+
+interface WalletOption {
+  id: string;
+  address: string;
+  connector: {
+    key: string;
+    name?: string;
+  };
+}
+
+interface WalletSelectorProps {
+  wallets: WalletOption[];
+  selectedWalletId: string | null;
+  onSelectWallet: (walletId: string) => void;
+  label: string;
+  networkType: NetworkType | null;
+  placeholder?: string;
+}
+
+export function WalletSelector({
+  wallets,
+  selectedWalletId,
+  onSelectWallet,
+  label,
+  networkType,
+  placeholder = "Select wallet",
+}: WalletSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter wallets by network type compatibility
+  const compatibleWallets = wallets.filter((wallet) => {
+    if (!networkType) return true;
+
+    const connectorKey = String(wallet.connector.key).toLowerCase();
+
+    switch (networkType) {
+      case "evm":
+        return (
+          connectorKey.includes("metamask") ||
+          connectorKey.includes("coinbase") ||
+          connectorKey.includes("walletconnect") ||
+          connectorKey.includes("rainbow") ||
+          (connectorKey.includes("phantom") && connectorKey.includes("evm")) ||
+          (!connectorKey.includes("solana") && !connectorKey.includes("sui"))
+        );
+
+      case "solana":
+        return (
+          (connectorKey.includes("phantom") && !connectorKey.includes("evm")) ||
+          connectorKey.includes("solana") ||
+          connectorKey.includes("solflare") ||
+          connectorKey.includes("backpack")
+        );
+
+      case "sui":
+        return connectorKey.includes("sui");
+
+      default:
+        return false;
+    }
+  });
+
+  const selectedWallet = compatibleWallets.find(
+    (w) => w.id === selectedWalletId,
+  );
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getWalletName = (wallet: WalletOption) => {
+    return wallet.connector.name || wallet.connector.key;
+  };
+
+  if (compatibleWallets.length === 0) {
+    return (
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-muted-foreground">
+          {label}
+        </label>
+        <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <Wallet className="size-4" />
+          <span>No compatible {networkType?.toUpperCase()} wallets connected</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative space-y-2" ref={dropdownRef}>
+      <label className="text-sm font-medium text-muted-foreground">
+        {label}
+      </label>
+
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex w-full items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/50 px-4 py-3 text-left backdrop-blur-xl transition-all",
+          "hover:border-border hover:bg-card/80",
+          isOpen && "border-border bg-card/80",
+        )}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
+            <Wallet className="size-4 text-blue-500" />
+          </div>
+          <div className="flex flex-col">
+            {selectedWallet ? (
+              <>
+                <span className="text-sm font-medium text-foreground">
+                  {getWalletName(selectedWallet)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatAddress(selectedWallet.address)}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                {placeholder}
+              </span>
+            )}
+          </div>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform",
+            isOpen && "rotate-180",
+          )}
+        />
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-border/50 bg-card/95 shadow-xl backdrop-blur-xl"
+          >
+            <div className="max-h-60 overflow-y-auto p-1">
+              {compatibleWallets.map((wallet) => (
+                <motion.button
+                  key={wallet.id}
+                  onClick={() => {
+                    onSelectWallet(wallet.id);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+                    "hover:bg-muted/50",
+                    wallet.id === selectedWalletId && "bg-muted/50",
+                  )}
+                  whileHover={{ x: 2 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
+                      <Wallet className="size-4 text-blue-500" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">
+                        {getWalletName(wallet)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatAddress(wallet.address)}
+                      </span>
+                    </div>
+                  </div>
+                  {wallet.id === selectedWalletId && (
+                    <Check className="size-4 text-blue-500" />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

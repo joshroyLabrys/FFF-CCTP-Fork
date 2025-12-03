@@ -1,11 +1,9 @@
 import { BridgeCard } from "~/components/bridge/bridge-card";
 import { AnimatedBackground } from "~/components/bridge/animated-background";
 import { BridgeHeader } from "~/components/bridge/header";
-
 import { Footer } from "~/components/bridge/footer";
 import { HydrateClient } from "~/trpc/server";
 import { RecentTransactions } from "~/components/bridge";
-// import { RecentTransactions } from "~/components/bridge/recent-transactions";
 
 export default function Home() {
   return (

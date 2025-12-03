@@ -1,7 +1,8 @@
 export { BridgeCard } from "./bridge-card";
-export { ChainSelector, SUPPORTED_CHAINS } from "./chain-selector";
+export { ChainSelector } from "./chain-selector";
 export { AmountInput } from "./amount-input";
 export { SwapButton } from "./swap-button";
+export { DestinationAddressInput } from "./destination-address-input";
 export { AnimatedBackground } from "./animated-background";
 export { BridgeHeader } from "./header";
 export { StatsCard } from "./stats-card";
@@ -11,9 +12,11 @@ export { Footer } from "./footer";
 export { LoadingSkeleton } from "./loading-skeleton";
 export { Notification } from "./notification";
 export { ThemeToggle } from "./theme-toggle";
+export { NetworkToggle } from "./network-toggle";
 export { ProgressIndicator } from "./progress-indicator";
 export { RecentTransactions } from "./recent-transactions";
-export type { Chain } from "./chain-selector";
+export { ThemeTransition } from "./theme-transition";
+export { WalletSelector } from "./wallet-selector";
 export type { TransactionStatus } from "./transaction-status";
 export type { NotificationType } from "./notification";
 

@@ -1,34 +1,148 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useState } from "react";
-import { ChainSelector, SUPPORTED_CHAINS, type Chain } from "./chain-selector";
+import { useState, useEffect } from "react";
+import { ChainSelector } from "./chain-selector";
 import { AmountInput } from "./amount-input";
 import { SwapButton } from "./swap-button";
+import { DestinationAddressInput } from "./destination-address-input";
+import { WalletSelector } from "./wallet-selector";
 import { Button } from "~/components/ui/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
+import {
+  useBridgeInit,
+  useBridge,
+  useBridgeEstimate,
+  useWalletBalance,
+  useFromChain,
+  useToChain,
+  useSetFromChain,
+  useSetToChain,
+  useSwapChains,
+  useWalletForNetwork,
+  useWalletSelection,
+} from "~/lib/bridge";
+import { NETWORK_CONFIGS } from "~/lib/bridge/networks";
+import { getAttestationTimeDisplay } from "~/lib/bridge/attestation-times";
 
 export function BridgeCard() {
-  const [fromChain, setFromChain] = useState<Chain>(SUPPORTED_CHAINS[0]!);
-  const [toChain, setToChain] = useState<Chain>(SUPPORTED_CHAINS[1]!);
-  const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  // Initialize bridge with wallet
+  const { isInitialized } = useBridgeInit();
 
-  const handleSwapChains = () => {
-    const temp = fromChain;
-    setFromChain(toChain);
-    setToChain(temp);
-  };
+  // Chain selection from store
+  const fromChain = useFromChain();
+  const toChain = useToChain();
+  const setFromChain = useSetFromChain();
+  const setToChain = useSetToChain();
+  const swapChains = useSwapChains();
+
+  // Wallet selection with multiple wallet support
+  const walletSelection = useWalletSelection(fromChain, toChain);
+  const {
+    sourceWallets,
+    selectedSourceWallet,
+    selectedSourceWalletId,
+    handleSelectSourceWallet,
+    destWallets,
+    selectedDestWallet,
+    selectedDestWalletId,
+    handleSelectDestWallet,
+    hasCompatibleSourceWallet,
+    hasCompatibleDestWallet,
+  } = walletSelection;
+
+  // Legacy compatibility check for destination wallet
+  const toNetworkType = toChain ? NETWORK_CONFIGS[toChain]?.type : null;
+  const {
+    compatibleWallet: destWallet,
+    hasCompatibleWallet: hasDestWallet,
+    promptWalletConnection: promptDestWalletConnection,
+  } = useWalletForNetwork(toNetworkType);
+
+  // Local state
+  const [amount, setAmount] = useState("");
+  const [useCustomAddress, setUseCustomAddress] = useState(false);
+  const [customAddress, setCustomAddress] = useState("");
+  const [isAddressValid, setIsAddressValid] = useState(false);
+
+  // Bridge operations
+  const {
+    executeBridge,
+    isLoading: isBridging,
+    error: bridgeError,
+  } = useBridge();
+  const { estimateBridge, estimate, isEstimating } = useBridgeEstimate();
+  const { balance } = useWalletBalance(fromChain);
+
+  // Estimate on amount/chain change
+  useEffect(() => {
+    if (fromChain && toChain && amount && parseFloat(amount) > 0) {
+      void estimateBridge({
+        fromChain,
+        toChain,
+        amount,
+        recipientAddress: useCustomAddress ? customAddress : undefined,
+      });
+    }
+  }, [
+    fromChain,
+    toChain,
+    amount,
+    useCustomAddress,
+    customAddress,
+    estimateBridge,
+  ]);
 
   const handleBridge = async () => {
-    setIsLoading(true);
-    // Simulate bridge transaction
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsLoading(false);
+    if (!fromChain || !toChain || !amount) return;
+
+    // Check if we need destination wallet and don't have one
+    if (!useCustomAddress && !hasDestWallet) {
+      // Prompt user to connect destination wallet using the hook's prompt function
+      const chainName = NETWORK_CONFIGS[toChain]?.name;
+      promptDestWalletConnection(chainName);
+      return;
+    }
+
+    // If using custom address, verify it's valid
+    if (useCustomAddress && !isAddressValid) {
+      return;
+    }
+
+    try {
+      await executeBridge({
+        fromChain,
+        toChain,
+        amount,
+        recipientAddress: useCustomAddress ? customAddress : undefined,
+      });
+      // Reset amount on success
+      setAmount("");
+      setCustomAddress("");
+      setUseCustomAddress(false);
+    } catch (error) {
+      console.error("Bridge failed:", error);
+    }
   };
 
   const isValidAmount = amount && parseFloat(amount) > 0;
+
+  // Can bridge if:
+  // - Service is initialized
+  // - Has from/to chains and valid amount
+  // - Either has compatible dest wallet OR has valid custom address
+  // - Not currently bridging
+  const canBridge =
+    isInitialized &&
+    fromChain &&
+    toChain &&
+    isValidAmount &&
+    !isBridging &&
+    (useCustomAddress ? isAddressValid : hasDestWallet);
+
+  // Check if we need to prompt for destination wallet
+  const needsDestinationWallet = toChain && !hasDestWallet && !useCustomAddress;
 
   return (
     <motion.div
@@ -38,13 +152,13 @@ export function BridgeCard() {
       className="relative w-full max-w-lg"
     >
       {/* Glow effect */}
-      <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 opacity-50 blur-2xl" />
+      <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-blue-500/20 via-cyan-500/20 to-sky-500/20 opacity-50 blur-2xl" />
 
-      <div className="relative overflow-hidden rounded-3xl border border-border/50 bg-card/80 p-6 shadow-2xl backdrop-blur-2xl">
+      <div className="border-border/50 bg-card/80 relative overflow-hidden rounded-3xl border p-6 shadow-2xl backdrop-blur-2xl">
         {/* Header */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground">Bridge USDC</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h2 className="text-foreground text-2xl font-bold">Bridge USDC</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
             Transfer USDC across chains instantly with Circle CCTP
           </p>
         </div>
@@ -55,21 +169,32 @@ export function BridgeCard() {
             selectedChain={fromChain}
             onSelectChain={setFromChain}
             label="From"
-            excludeChainId={toChain.id}
+            excludeChainId={toChain}
           />
+
+          {/* Source Wallet Selector */}
+          {fromChain && sourceWallets.length > 0 && (
+            <WalletSelector
+              wallets={sourceWallets}
+              selectedWalletId={selectedSourceWalletId}
+              onSelectWallet={handleSelectSourceWallet}
+              label="Source Wallet"
+              networkType={NETWORK_CONFIGS[fromChain]?.type ?? "evm"}
+            />
+          )}
 
           {/* Amount Input */}
           <AmountInput
             value={amount}
             onChange={setAmount}
-            balance="1,234.56"
+            balance={balance}
             label="Amount"
           />
         </div>
 
         {/* Swap Button */}
         <div className="my-4">
-          <SwapButton onSwap={handleSwapChains} />
+          <SwapButton onSwap={swapChains} />
         </div>
 
         {/* To Chain */}
@@ -78,24 +203,92 @@ export function BridgeCard() {
             selectedChain={toChain}
             onSelectChain={setToChain}
             label="To"
-            excludeChainId={fromChain.id}
+            excludeChainId={fromChain}
           />
+
+          {/* Destination Wallet Selector */}
+          {toChain && destWallets.length > 0 && !useCustomAddress && (
+            <WalletSelector
+              wallets={destWallets}
+              selectedWalletId={selectedDestWalletId}
+              onSelectWallet={handleSelectDestWallet}
+              label="Destination Wallet"
+              networkType={NETWORK_CONFIGS[toChain]?.type ?? "evm"}
+            />
+          )}
+
+          {/* Destination Address Input */}
+          {toChain && toNetworkType && (
+            <DestinationAddressInput
+              networkType={toNetworkType}
+              value={customAddress}
+              onChange={setCustomAddress}
+              onValidationChange={setIsAddressValid}
+              useCustomAddress={useCustomAddress}
+              onToggleCustomAddress={setUseCustomAddress}
+              connectedWalletAddress={
+                selectedDestWallet?.address ?? destWallet?.address
+              }
+            />
+          )}
+
+          {/* Destination Wallet Warning */}
+          {needsDestinationWallet && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border-border/50 bg-muted/30 rounded-xl border p-3 backdrop-blur-xl"
+            >
+              <div className="flex flex-col gap-3">
+                <div className="text-muted-foreground flex items-start gap-2 text-sm">
+                  <AlertCircle className="mt-0.5 size-4 flex-shrink-0" />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-foreground font-medium">
+                      Connect {NETWORK_CONFIGS[toChain]?.name} wallet
+                    </p>
+                    <p className="text-xs">
+                      You need a{" "}
+                      {NETWORK_CONFIGS[toChain]?.type === "evm"
+                        ? "EVM"
+                        : "Solana"}{" "}
+                      wallet to receive USDC, or enable &quot;Send to a
+                      different address&quot; option above.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() =>
+                    promptDestWalletConnection(NETWORK_CONFIGS[toChain]?.name)
+                  }
+                  variant="outline"
+                  className="border-border/50 bg-card/50 hover:bg-card/80 w-full backdrop-blur-xl"
+                >
+                  Connect{" "}
+                  {NETWORK_CONFIGS[toChain]?.type === "evm" ? "EVM" : "Solana"}{" "}
+                  Wallet
+                </Button>
+              </div>
+            </motion.div>
+          )}
 
           {/* Estimated Receive */}
           <motion.div
             className={cn(
-              "rounded-2xl border border-border/30 bg-muted/30 p-4 backdrop-blur-xl",
+              "border-border/30 bg-muted/30 rounded-2xl border p-4 backdrop-blur-xl",
             )}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 You will receive
               </span>
-              <span className="text-lg font-semibold text-foreground">
-                {amount || "0.00"} USDC
+              <span className="text-foreground text-lg font-semibold">
+                {isEstimating
+                  ? "..."
+                  : (estimate?.receiveAmount ?? (amount || "0.00"))}{" "}
+                USDC
               </span>
             </div>
           </motion.div>
@@ -103,41 +296,66 @@ export function BridgeCard() {
 
         {/* Bridge Details */}
         <motion.div
-          className="mt-4 space-y-2 rounded-xl bg-muted/20 p-4"
+          className="bg-muted/20 mt-4 space-y-2 rounded-xl p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Transfer time</span>
-            <span className="font-medium text-foreground">~13 minutes</span>
+            <span className="text-foreground font-medium">
+              {isEstimating
+                ? "..."
+                : fromChain
+                  ? getAttestationTimeDisplay(fromChain)
+                  : "~13 minutes"}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Network fee</span>
-            <span className="font-medium text-foreground">~$2.50</span>
+            <span className="text-foreground font-medium">
+              {isEstimating
+                ? "..."
+                : estimate
+                  ? `$${parseFloat(estimate.fees.total)}`
+                  : "~$2.50"}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Bridge fee</span>
-            <span className="font-medium text-foreground">0%</span>
+            <span className="text-foreground font-medium">0%</span>
           </div>
         </motion.div>
+
+        {/* Error Display */}
+        {bridgeError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 rounded-xl border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-500"
+          >
+            {bridgeError}
+          </motion.div>
+        )}
 
         {/* Bridge Button */}
         <motion.div
           className="mt-6"
-          whileHover={{ scale: isValidAmount ? 1.02 : 1 }}
-          whileTap={{ scale: isValidAmount ? 0.98 : 1 }}
+          whileHover={{ scale: canBridge ? 1.02 : 1 }}
+          whileTap={{ scale: canBridge ? 0.98 : 1 }}
         >
           <Button
             onClick={handleBridge}
-            disabled={!isValidAmount || isLoading}
+            disabled={!canBridge && !needsDestinationWallet}
             className={cn(
-              "group relative h-14 w-full overflow-hidden rounded-xl bg-gradient-to-r from-primary via-purple-600 to-pink-600 text-base font-semibold text-white shadow-lg transition-all",
-              "hover:shadow-xl hover:shadow-primary/25",
+              "group relative h-14 w-full overflow-hidden rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-base font-semibold text-white shadow-lg transition-all",
+              "hover:from-slate-800 hover:via-slate-700 hover:to-slate-800 hover:shadow-xl hover:shadow-slate-500/20",
               "disabled:cursor-not-allowed disabled:opacity-50",
+              "dark:from-slate-100 dark:via-slate-50 dark:to-slate-100 dark:text-slate-900",
+              "dark:hover:from-slate-50 dark:hover:via-white dark:hover:to-slate-50",
             )}
           >
-            {isLoading ? (
+            {isBridging ? (
               <motion.div
                 className="flex items-center gap-2"
                 initial={{ opacity: 0 }}
@@ -146,6 +364,18 @@ export function BridgeCard() {
                 <Loader2 className="size-5 animate-spin" />
                 <span>Processing...</span>
               </motion.div>
+            ) : !isInitialized ? (
+              <span>Connect Wallet</span>
+            ) : !fromChain || !toChain ? (
+              <span>Select Networks</span>
+            ) : needsDestinationWallet ? (
+              <span>
+                Connect{" "}
+                {NETWORK_CONFIGS[toChain]?.type === "evm" ? "EVM" : "Solana"}{" "}
+                Wallet
+              </span>
+            ) : !isValidAmount ? (
+              <span>Enter Amount</span>
             ) : (
               <motion.div className="flex items-center gap-2">
                 <span>Bridge USDC</span>
@@ -157,7 +387,7 @@ export function BridgeCard() {
 
         {/* Powered by */}
         <motion.div
-          className="mt-4 text-center text-xs text-muted-foreground"
+          className="text-muted-foreground mt-4 text-center text-xs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
@@ -168,4 +398,3 @@ export function BridgeCard() {
     </motion.div>
   );
 }
-
