@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { DynamicProvider } from "~/components/providers/dynamic-provider";
+import { RootScrollArea } from "~/components/ui/scroll-area";
 
 export const metadata: Metadata = {
   title: "CCTP Bridge - Cross-Chain USDC Transfer",
@@ -25,7 +26,9 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <TRPCReactProvider>
-          <DynamicProvider>{children}</DynamicProvider>
+          <DynamicProvider>
+            <RootScrollArea>{children}</RootScrollArea>
+          </DynamicProvider>
         </TRPCReactProvider>
       </body>
     </html>

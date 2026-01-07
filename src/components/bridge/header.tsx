@@ -30,12 +30,15 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { TokenUSDC } from "@web3icons/react";
-import { RecentTransactions } from "./recent-transactions";
 import {
-  useActiveWindow,
-  useSetActiveWindow,
+  RecentTransactions,
+  RecentTransactionsHeader,
+} from "./recent-transactions";
+import {
   useWindowPositions,
   useSetWindowPosition,
+  useWindowZIndexes,
+  useFocusWindow,
   useHasHydrated,
   validateOrResetPosition,
   getWindowDimensions,
@@ -43,11 +46,13 @@ import {
   useEnvironment,
   DEFAULT_WINDOW_POSITIONS,
 } from "~/lib/bridge";
+import { WindowPortal } from "~/components/ui/window-portal";
 import {
   NotificationBell,
   NotificationPanel,
 } from "~/components/notifications";
 import { CommandPalette } from "~/components/ui/command-palette";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 export function BridgeHeader() {
   const {
@@ -70,7 +75,7 @@ export function BridgeHeader() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="border-border/40 bg-card/95 fixed top-0 right-0 left-0 z-50 h-12 w-full border-b backdrop-blur-xl"
+        className="border-border/40 bg-card/95 fixed top-0 right-0 left-0 z-200 h-12 w-full border-b backdrop-blur-xl"
       >
         <div className="flex h-full items-center justify-between px-3 sm:px-6">
           {/* Left section - Logo, app name, and menu */}
@@ -359,7 +364,7 @@ export function BridgeHeader() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm"
               onClick={() => setShowDynamicUserProfile(false)}
             />
 
@@ -369,7 +374,7 @@ export function BridgeHeader() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2"
+              className="fixed top-1/2 left-1/2 z-300 w-full max-w-md -translate-x-1/2 -translate-y-1/2"
             >
               <div className="border-border/50 bg-background rounded-2xl border shadow-2xl">
                 <DynamicEmbeddedWidget background="default" />
@@ -435,14 +440,14 @@ function DraggableTransactionHistory({ onClose }: { onClose: () => void }) {
   const [isDragging, setIsDragging] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
-  const activeWindow = useActiveWindow();
-  const setActiveWindow = useSetActiveWindow();
   const windowPositions = useWindowPositions();
   const setWindowPosition = useSetWindowPosition();
+  const windowZIndexes = useWindowZIndexes();
+  const focusWindow = useFocusWindow();
   const hasHydrated = useHasHydrated();
 
-  const isActive = activeWindow === "transaction-history";
-  const zIndex = isActive ? "z-20" : "z-10";
+  // Get z-index from unified store
+  const zIndex = windowZIndexes["transaction-history"];
 
   // Get saved position and validate it's within viewport
   const defaultPosition = { x: 100, y: 150 };
@@ -559,7 +564,7 @@ function DraggableTransactionHistory({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <>
+    <WindowPortal>
       {/* Draggable window */}
       <motion.div
         ref={windowRef}
@@ -588,11 +593,12 @@ function DraggableTransactionHistory({ onClose }: { onClose: () => void }) {
           damping: 30,
           stiffness: 300,
         }}
-        className={cn("fixed top-0 left-0 hidden lg:block", zIndex)}
+        className="fixed top-0 left-0 hidden lg:block"
         style={{
           touchAction: "none",
+          zIndex,
         }}
-        onPointerDown={() => setActiveWindow("transaction-history")}
+        onPointerDown={() => focusWindow("transaction-history")}
       >
         <div
           className={cn(
@@ -670,13 +676,20 @@ function DraggableTransactionHistory({ onClose }: { onClose: () => void }) {
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="max-h-[600px] overflow-y-auto p-4">
-              <RecentTransactions />
+            {/* Fixed header */}
+            <div className="border-border/30 border-b px-4 pt-4 pb-2">
+              <RecentTransactionsHeader />
             </div>
+            {/* Scrollable transaction list */}
+            <ScrollArea className="macos-window-scrollbar max-h-[520px]">
+              <div className="p-4">
+                <RecentTransactions hideHeader />
+              </div>
+            </ScrollArea>
           </motion.div>
         </div>
       </motion.div>
-    </>
+    </WindowPortal>
   );
 }
 
@@ -738,10 +751,17 @@ function MobileTransactionHistoryDrawer({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <RecentTransactions />
+        {/* Fixed header description */}
+        <div className="border-border/30 border-b px-4 pb-3">
+          <RecentTransactionsHeader />
         </div>
+
+        {/* Content */}
+        <ScrollArea className="macos-window-scrollbar flex-1">
+          <div className="p-4">
+            <RecentTransactions hideHeader />
+          </div>
+        </ScrollArea>
       </motion.div>
     </>
   );
@@ -753,14 +773,14 @@ function DraggableDisclaimerWindow({ onClose }: { onClose: () => void }) {
   const [isDragging, setIsDragging] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
-  const activeWindow = useActiveWindow();
-  const setActiveWindow = useSetActiveWindow();
   const windowPositions = useWindowPositions();
   const setWindowPosition = useSetWindowPosition();
+  const windowZIndexes = useWindowZIndexes();
+  const focusWindow = useFocusWindow();
   const hasHydrated = useHasHydrated();
 
-  const isActive = activeWindow === "disclaimer";
-  const zIndex = isActive ? "z-30" : "z-20";
+  // Get z-index from unified store
+  const zIndex = windowZIndexes.disclaimer;
 
   const defaultPosition = DEFAULT_WINDOW_POSITIONS.disclaimer;
   const dimensions = getWindowDimensions("disclaimer", false);
@@ -825,139 +845,146 @@ function DraggableDisclaimerWindow({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <motion.div
-      ref={windowRef}
-      drag
-      dragControls={dragControls}
-      dragListener={false}
-      dragElastic={0}
-      dragMomentum={false}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      initial={{
-        opacity: 0,
-        scale: 0.95,
-        x: initialPosition.x,
-        y: initialPosition.y,
-      }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        x: currentPosition.x,
-        y: currentPosition.y,
-      }}
-      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className={cn("fixed top-0 left-0 hidden lg:block", zIndex)}
-      style={{ touchAction: "none" }}
-      onPointerDown={() => setActiveWindow("disclaimer")}
-    >
-      <div className="border-border/50 bg-card/95 w-[500px] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
-        {/* macOS-style title bar */}
-        <div
-          className="bg-muted/40 group border-border/30 flex cursor-grab items-center justify-between border-b px-3 py-2.5 active:cursor-grabbing"
-          onPointerDown={(e) => dragControls.start(e)}
-        >
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="group/btn relative size-3 rounded-full bg-red-500 transition-all hover:bg-red-600"
-              aria-label="Close window"
-            >
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-red-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
-                ×
-              </span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMinimized(!isMinimized);
-              }}
-              className="group/btn relative size-3 rounded-full bg-yellow-500 transition-all hover:bg-yellow-600"
-              aria-label="Minimize window"
-            >
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-yellow-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
-                −
-              </span>
-            </motion.button>
-            <div className="size-3 rounded-full bg-gray-400" />
+    <WindowPortal>
+      <motion.div
+        ref={windowRef}
+        drag
+        dragControls={dragControls}
+        dragListener={false}
+        dragElastic={0}
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        initial={{
+          opacity: 0,
+          scale: 0.95,
+          x: initialPosition.x,
+          y: initialPosition.y,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          x: currentPosition.x,
+          y: currentPosition.y,
+        }}
+        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed top-0 left-0 hidden lg:block"
+        style={{ touchAction: "none", zIndex }}
+        onPointerDown={() => focusWindow("disclaimer")}
+      >
+        <div className="border-border/50 bg-card/95 w-[500px] overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
+          {/* macOS-style title bar */}
+          <div
+            className="bg-muted/40 group border-border/30 flex cursor-grab items-center justify-between border-b px-3 py-2.5 active:cursor-grabbing"
+            onPointerDown={(e) => dragControls.start(e)}
+          >
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                className="group/btn relative size-3 rounded-full bg-red-500 transition-all hover:bg-red-600"
+                aria-label="Close window"
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-red-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
+                  ×
+                </span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMinimized(!isMinimized);
+                }}
+                className="group/btn relative size-3 rounded-full bg-yellow-500 transition-all hover:bg-yellow-600"
+                aria-label="Minimize window"
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-yellow-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
+                  −
+                </span>
+              </motion.button>
+              <div className="size-3 rounded-full bg-gray-400" />
+            </div>
+            <div className="text-muted-foreground pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium">
+              Disclaimer
+            </div>
+            <div className="w-[52px]" />
           </div>
-          <div className="text-muted-foreground pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium">
-            Disclaimer
-          </div>
-          <div className="w-[52px]" />
-        </div>
 
-        {/* Content */}
-        <motion.div
-          animate={{
-            height: isMinimized ? 0 : "auto",
-            opacity: isMinimized ? 0 : 1,
-          }}
-          transition={{ duration: 0.2 }}
-          className="overflow-hidden"
-        >
-          <div className="max-h-[500px] space-y-4 overflow-y-auto p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
-                <AlertTriangle className="size-5 text-amber-500" />
+          {/* Content */}
+          <motion.div
+            animate={{
+              height: isMinimized ? 0 : "auto",
+              opacity: isMinimized ? 0 : 1,
+            }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <ScrollArea className="macos-window-scrollbar max-h-[500px]">
+              <div className="space-y-4 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
+                    <AlertTriangle className="size-5 text-amber-500" />
+                  </div>
+                  <h3 className="text-foreground text-lg font-semibold">
+                    Important Notice
+                  </h3>
+                </div>
+
+                <div className="text-muted-foreground space-y-3 text-sm leading-relaxed">
+                  <p>
+                    This is an{" "}
+                    <strong className="text-foreground">
+                      unofficial, open-source user interface
+                    </strong>{" "}
+                    for Circle&apos;s Cross-Chain Transfer Protocol (CCTP). This
+                    application is not developed, maintained, or endorsed by
+                    Circle Internet Financial, LLC.
+                  </p>
+
+                  <p>
+                    <strong className="text-foreground">
+                      Unaudited Software:
+                    </strong>{" "}
+                    This software has not undergone a formal security audit.
+                    While we strive for security best practices, users should be
+                    aware that undiscovered vulnerabilities may exist.
+                  </p>
+
+                  <p>
+                    <strong className="text-foreground">
+                      Use at Your Own Risk:
+                    </strong>{" "}
+                    By using this application, you acknowledge and accept all
+                    risks associated with blockchain transactions, including but
+                    not limited to loss of funds, failed transactions, and smart
+                    contract vulnerabilities.
+                  </p>
+
+                  <p>
+                    <strong className="text-foreground">No Warranty:</strong>{" "}
+                    This software is provided &quot;as is&quot; without warranty
+                    of any kind, express or implied. The developers assume no
+                    liability for any damages arising from the use of this
+                    application.
+                  </p>
+
+                  <p className="text-muted-foreground/70 text-xs">
+                    Always verify transaction details before confirming. Never
+                    bridge more than you can afford to lose.
+                  </p>
+                </div>
               </div>
-              <h3 className="text-foreground text-lg font-semibold">
-                Important Notice
-              </h3>
-            </div>
-
-            <div className="text-muted-foreground space-y-3 text-sm leading-relaxed">
-              <p>
-                This is an{" "}
-                <strong className="text-foreground">
-                  unofficial, open-source user interface
-                </strong>{" "}
-                for Circle&apos;s Cross-Chain Transfer Protocol (CCTP). This
-                application is not developed, maintained, or endorsed by Circle
-                Internet Financial, LLC.
-              </p>
-
-              <p>
-                <strong className="text-foreground">Unaudited Software:</strong>{" "}
-                This software has not undergone a formal security audit. While
-                we strive for security best practices, users should be aware
-                that undiscovered vulnerabilities may exist.
-              </p>
-
-              <p>
-                <strong className="text-foreground">
-                  Use at Your Own Risk:
-                </strong>{" "}
-                By using this application, you acknowledge and accept all risks
-                associated with blockchain transactions, including but not
-                limited to loss of funds, failed transactions, and smart
-                contract vulnerabilities.
-              </p>
-
-              <p>
-                <strong className="text-foreground">No Warranty:</strong> This
-                software is provided &quot;as is&quot; without warranty of any
-                kind, express or implied. The developers assume no liability for
-                any damages arising from the use of this application.
-              </p>
-
-              <p className="text-muted-foreground/70 text-xs">
-                Always verify transaction details before confirming. Never
-                bridge more than you can afford to lose.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </motion.div>
+            </ScrollArea>
+          </motion.div>
+        </div>
+      </motion.div>
+    </WindowPortal>
   );
 }
 
@@ -1004,35 +1031,41 @@ function MobileDisclaimerDrawer({ onClose }: { onClose: () => void }) {
             </svg>
           </button>
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
-              <AlertTriangle className="size-5 text-amber-500" />
+        <ScrollArea className="macos-window-scrollbar flex-1">
+          <div className="space-y-4 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10">
+                <AlertTriangle className="size-5 text-amber-500" />
+              </div>
+              <h3 className="text-foreground font-semibold">
+                Important Notice
+              </h3>
             </div>
-            <h3 className="text-foreground font-semibold">Important Notice</h3>
+            <div className="text-muted-foreground space-y-3 text-sm">
+              <p>
+                This is an{" "}
+                <strong className="text-foreground">
+                  unofficial, open-source UI
+                </strong>{" "}
+                for Circle&apos;s CCTP.
+              </p>
+              <p>
+                <strong className="text-foreground">Unaudited:</strong> Not
+                formally security audited.
+              </p>
+              <p>
+                <strong className="text-foreground">
+                  Use at Your Own Risk:
+                </strong>{" "}
+                You accept all blockchain transaction risks.
+              </p>
+              <p>
+                <strong className="text-foreground">No Warranty:</strong>{" "}
+                Provided &quot;as is&quot; without warranty.
+              </p>
+            </div>
           </div>
-          <div className="text-muted-foreground space-y-3 text-sm">
-            <p>
-              This is an{" "}
-              <strong className="text-foreground">
-                unofficial, open-source UI
-              </strong>{" "}
-              for Circle&apos;s CCTP.
-            </p>
-            <p>
-              <strong className="text-foreground">Unaudited:</strong> Not
-              formally security audited.
-            </p>
-            <p>
-              <strong className="text-foreground">Use at Your Own Risk:</strong>{" "}
-              You accept all blockchain transaction risks.
-            </p>
-            <p>
-              <strong className="text-foreground">No Warranty:</strong> Provided
-              &quot;as is&quot; without warranty.
-            </p>
-          </div>
-        </div>
+        </ScrollArea>
       </motion.div>
     </>
   );
@@ -1199,14 +1232,14 @@ function DraggablePongWindow({ onClose }: { onClose: () => void }) {
   const [isDragging, setIsDragging] = useState(false);
   const windowRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
-  const activeWindow = useActiveWindow();
-  const setActiveWindow = useSetActiveWindow();
   const windowPositions = useWindowPositions();
   const setWindowPosition = useSetWindowPosition();
+  const windowZIndexes = useWindowZIndexes();
+  const focusWindow = useFocusWindow();
   const hasHydrated = useHasHydrated();
 
-  const isActive = activeWindow === "pong";
-  const zIndex = isActive ? "z-30" : "z-20";
+  // Get z-index from unified store
+  const zIndex = windowZIndexes.pong;
 
   const defaultPosition = DEFAULT_WINDOW_POSITIONS.pong;
   const dimensions = getWindowDimensions("pong", false);
@@ -1269,91 +1302,93 @@ function DraggablePongWindow({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <motion.div
-      ref={windowRef}
-      drag
-      dragControls={dragControls}
-      dragListener={false}
-      dragElastic={0}
-      dragMomentum={false}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      initial={{
-        opacity: 0,
-        scale: 0.95,
-        x: initialPosition.x,
-        y: initialPosition.y,
-      }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        x: currentPosition.x,
-        y: currentPosition.y,
-      }}
-      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-      transition={{ type: "spring", damping: 30, stiffness: 300 }}
-      className={cn("fixed top-0 left-0 hidden lg:block", zIndex)}
-      style={{ touchAction: "none" }}
-      onPointerDown={() => setActiveWindow("pong")}
-    >
-      <div className="border-border/50 bg-card/95 overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
-        {/* Title bar */}
-        <div
-          className="bg-muted/40 group border-border/30 flex cursor-grab items-center justify-between border-b px-3 py-2.5 active:cursor-grabbing"
-          onPointerDown={(e) => dragControls.start(e)}
-        >
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleClose();
-              }}
-              className="group/btn relative size-3 rounded-full bg-red-500 transition-all hover:bg-red-600"
-              aria-label="Close window"
-            >
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-red-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
-                ×
-              </span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsMinimized(!isMinimized);
-              }}
-              className="group/btn relative size-3 rounded-full bg-yellow-500 transition-all hover:bg-yellow-600"
-              aria-label="Minimize window"
-            >
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-yellow-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
-                −
-              </span>
-            </motion.button>
-            <div className="size-3 rounded-full bg-gray-400" />
+    <WindowPortal>
+      <motion.div
+        ref={windowRef}
+        drag
+        dragControls={dragControls}
+        dragListener={false}
+        dragElastic={0}
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        initial={{
+          opacity: 0,
+          scale: 0.95,
+          x: initialPosition.x,
+          y: initialPosition.y,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          x: currentPosition.x,
+          y: currentPosition.y,
+        }}
+        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        className="fixed top-0 left-0 hidden lg:block"
+        style={{ touchAction: "none", zIndex }}
+        onPointerDown={() => focusWindow("pong")}
+      >
+        <div className="border-border/50 bg-card/95 overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
+          {/* Title bar */}
+          <div
+            className="bg-muted/40 group border-border/30 flex cursor-grab items-center justify-between border-b px-3 py-2.5 active:cursor-grabbing"
+            onPointerDown={(e) => dragControls.start(e)}
+          >
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
+                className="group/btn relative size-3 rounded-full bg-red-500 transition-all hover:bg-red-600"
+                aria-label="Close window"
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-red-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
+                  ×
+                </span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsMinimized(!isMinimized);
+                }}
+                className="group/btn relative size-3 rounded-full bg-yellow-500 transition-all hover:bg-yellow-600"
+                aria-label="Minimize window"
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-yellow-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
+                  −
+                </span>
+              </motion.button>
+              <div className="size-3 rounded-full bg-gray-400" />
+            </div>
+            <div className="text-muted-foreground pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium">
+              Pong
+            </div>
+            <div className="w-[52px]" />
           </div>
-          <div className="text-muted-foreground pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium">
-            Pong
-          </div>
-          <div className="w-[52px]" />
-        </div>
 
-        {/* Content */}
-        <motion.div
-          animate={{
-            height: isMinimized ? 0 : "auto",
-            opacity: isMinimized ? 0 : 1,
-          }}
-          transition={{ duration: 0.2 }}
-          className="overflow-hidden"
-        >
-          <div className="p-4">
-            <PongGame />
-          </div>
-        </motion.div>
-      </div>
-    </motion.div>
+          {/* Content */}
+          <motion.div
+            animate={{
+              height: isMinimized ? 0 : "auto",
+              opacity: isMinimized ? 0 : 1,
+            }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4">
+              <PongGame />
+            </div>
+          </motion.div>
+        </div>
+      </motion.div>
+    </WindowPortal>
   );
 }
 
@@ -1400,9 +1435,11 @@ function MobilePongDrawer({ onClose }: { onClose: () => void }) {
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <PongGame />
-        </div>
+        <ScrollArea className="macos-window-scrollbar flex-1">
+          <div className="p-4">
+            <PongGame />
+          </div>
+        </ScrollArea>
       </motion.div>
     </>
   );

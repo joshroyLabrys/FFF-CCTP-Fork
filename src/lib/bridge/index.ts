@@ -33,6 +33,8 @@ export {
   validateOrResetPosition,
   getWindowDimensions,
   DEFAULT_WINDOW_POSITIONS,
+  NAVBAR_HEIGHT,
+  NAVBAR_SAFE_ZONE,
 } from "./window-utils";
 export type { WindowDimensions, WindowPosition, WindowType } from "./window-utils";
 
@@ -89,6 +91,8 @@ export {
   useSetActiveWindow,
   useWindowPositions,
   useSetWindowPosition,
+  useWindowZIndexes,
+  useFocusWindow,
   useHasHydrated,
   // Multi-window transaction support
   useOpenTransactionWindows,

@@ -77,6 +77,9 @@ export interface BridgeState {
   setActiveWindow: (window: WindowType | null) => void;
   windowPositions: Record<WindowType, WindowPosition>;
   setWindowPosition: (window: WindowType, position: WindowPosition) => void;
+  // Unified z-index management for all windows
+  windowZIndexes: Record<WindowType, number>;
+  focusWindow: (window: WindowType) => void;
 
   // Loading states
   isLoading: boolean;
@@ -109,6 +112,13 @@ export const useBridgeStore = create<BridgeState>()(
       isLoading: false,
       error: null,
       windowPositions: { ...DEFAULT_WINDOW_POSITIONS },
+      windowZIndexes: {
+        "fee-details": 100,
+        "transaction-history": 100,
+        "bridge-progress": 100,
+        "disclaimer": 100,
+        "pong": 100,
+      },
 
       // Multi-window transaction state
       openTransactionWindows: new Map(),
@@ -153,6 +163,20 @@ export const useBridgeStore = create<BridgeState>()(
             [window]: position,
           },
         })),
+
+      // Unified z-index focus for non-transaction windows
+      // Uses the same nextZIndex counter as transaction windows
+      focusWindow: (window) => {
+        const { nextZIndex } = get();
+        set((state) => ({
+          activeWindow: window,
+          windowZIndexes: {
+            ...state.windowZIndexes,
+            [window]: nextZIndex,
+          },
+          nextZIndex: nextZIndex + 1,
+        }));
+      },
 
       // Multi-window transaction management
       openTransactionWindow: (transaction, position) => {
@@ -390,6 +414,11 @@ export const useWindowPositions = () =>
   useBridgeStore((state) => state.windowPositions);
 export const useSetWindowPosition = () =>
   useBridgeStore((state) => state.setWindowPosition);
+
+export const useWindowZIndexes = () =>
+  useBridgeStore((state) => state.windowZIndexes);
+export const useFocusWindow = () =>
+  useBridgeStore((state) => state.focusWindow);
 
 export const useHasHydrated = () =>
   useBridgeStore((state) => state._hasHydrated);

@@ -30,7 +30,26 @@ function formatTimestamp(timestamp: number): string {
   return `${days}d ago`;
 }
 
-export function RecentTransactions() {
+interface RecentTransactionsProps {
+  hideHeader?: boolean;
+}
+
+export function RecentTransactionsHeader() {
+  const environment = useEnvironment();
+
+  return (
+    <div className="mb-4">
+      <h3 className="text-foreground text-lg font-semibold">
+        Recent Transactions
+      </h3>
+      <p className="text-muted-foreground mt-0.5 text-xs">
+        Your latest {environment} bridge activity
+      </p>
+    </div>
+  );
+}
+
+export function RecentTransactions({ hideHeader = false }: RecentTransactionsProps) {
   const { transactions, isLoading } = useTransactionHistory();
   const environment = useEnvironment();
   const openTransactionWindow = useBridgeStore((state) => state.openTransactionWindow);
@@ -93,14 +112,16 @@ export function RecentTransactions() {
       transition={{ duration: 0.5, delay: 0.5 }}
       className="w-full max-w-4xl"
     >
-      <div className="mb-6">
-        <h3 className="text-foreground text-2xl font-bold">
-          Recent Transactions
-        </h3>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Your latest {environment} bridge activity
-        </p>
-      </div>
+      {!hideHeader && (
+        <div className="mb-6">
+          <h3 className="text-foreground text-2xl font-bold">
+            Recent Transactions
+          </h3>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Your latest {environment} bridge activity
+          </p>
+        </div>
+      )}
 
       <div className="space-y-3">
         {filteredTransactions.map((tx, index) => {

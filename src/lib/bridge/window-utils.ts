@@ -2,6 +2,12 @@
  * Window position utilities for draggable windows
  */
 
+/** Height of the navbar in pixels (h-12 = 48px) */
+export const NAVBAR_HEIGHT = 48;
+
+/** Safe zone below navbar - windows cannot be dragged above this Y position */
+export const NAVBAR_SAFE_ZONE = 60; // 48px navbar + 12px buffer
+
 export interface WindowDimensions {
   width: number;
   height: number;
@@ -45,9 +51,10 @@ export function constrainToViewport(
   // When dragging right, left edge must be at most (viewportWidth - minVisibleWidth)
   const maxX = viewportWidth - minVisibleWidth;
 
+  // Use NAVBAR_SAFE_ZONE as minimum Y to prevent windows from going above navbar
   const minY = Math.max(
-    padding,
-    minVisibleHeight - dimensions.height
+    NAVBAR_SAFE_ZONE,
+    minVisibleHeight - dimensions.height + NAVBAR_SAFE_ZONE
   );
 
   const maxY = viewportHeight - minVisibleHeight;
@@ -87,7 +94,7 @@ export function isWithinViewport(
   const minVisibleHeight = 50;
 
   const minX = padding;
-  const minY = padding;
+  const minY = NAVBAR_SAFE_ZONE; // Use navbar safe zone instead of padding for Y
 
   // Allow window to extend beyond viewport, just keep minimum portion visible
   const maxX = viewportWidth - minVisibleWidth;

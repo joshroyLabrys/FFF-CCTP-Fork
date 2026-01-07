@@ -22,6 +22,7 @@ import {
 import { cn } from "~/lib/utils";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEnvironment, useSetEnvironment } from "~/lib/bridge";
+import { WindowPortal } from "~/components/ui/window-portal";
 
 interface CommandPaletteProps {
   onOpenTransactionHistory: () => void;
@@ -85,26 +86,29 @@ export function CommandPalette({
   }, []);
 
   return (
-    <AnimatePresence>
-      {open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
+    <WindowPortal>
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              style={{ zIndex: 299 }}
+              onClick={() => setOpen(false)}
+            />
 
-          {/* Command Dialog */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed left-1/2 top-[20%] z-50 w-full max-w-lg -translate-x-1/2"
-          >
+            {/* Command Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed left-1/2 top-[20%] w-full max-w-lg -translate-x-1/2"
+              style={{ zIndex: 300 }}
+            >
             <Command
               className="border-border/50 bg-card/95 overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl"
               loop
@@ -259,6 +263,7 @@ export function CommandPalette({
         </>
       )}
     </AnimatePresence>
+    </WindowPortal>
   );
 }
 

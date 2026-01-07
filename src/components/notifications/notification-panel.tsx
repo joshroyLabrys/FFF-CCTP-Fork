@@ -14,6 +14,8 @@ import { Button } from "~/components/ui/button";
 import { useEffect, useRef } from "react";
 import { BridgeStorage } from "~/lib/bridge/storage";
 import { useBridgeStore } from "~/lib/bridge";
+import { WindowPortal } from "~/components/ui/window-portal";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 interface NotificationPanelProps {
   onNotificationAction?: (notification: Notification) => void;
@@ -75,99 +77,103 @@ export function NotificationPanel({ onNotificationAction }: NotificationPanelPro
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
+    <WindowPortal>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0"
+              style={{ zIndex: 199 }}
+              onClick={() => setIsOpen(false)}
+            />
 
-          {/* Panel */}
-          <motion.div
-            ref={panelRef}
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{
-              type: "spring",
-              damping: 25,
-              stiffness: 300,
-            }}
-            className="fixed right-4 top-16 z-50 w-full max-w-md"
-          >
-            {/* Theme-aware glassmorphic container */}
-            <div className="overflow-hidden rounded-xl bg-card/95 backdrop-blur-2xl shadow-2xl border border-border/50">
-              {/* Header */}
-              <div className="border-b border-border/30 px-4 py-3 bg-muted/40">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Notifications
-                    </h3>
+            {/* Panel */}
+            <motion.div
+              ref={panelRef}
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{
+                type: "spring",
+                damping: 25,
+                stiffness: 300,
+              }}
+              className="fixed right-4 top-14 w-full max-w-md"
+              style={{ zIndex: 200 }}
+            >
+              {/* Theme-aware glassmorphic container */}
+              <div className="overflow-hidden rounded-xl bg-card/95 backdrop-blur-2xl shadow-2xl border border-border/50">
+                {/* Header */}
+                <div className="border-b border-border/30 px-4 py-3 bg-muted/40">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium text-foreground">
+                        Notifications
+                      </h3>
+                      {notifications.length > 0 && (
+                        <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                          {notifications.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
                     {notifications.length > 0 && (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                        {notifications.length}
-                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearAll}
+                        className="h-7 gap-1.5 px-2 text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      >
+                        Clear all
+                      </Button>
                     )}
                   </div>
-
-                  {/* Actions */}
-                  {notifications.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearAll}
-                      className="h-7 gap-1.5 px-2 text-xs font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    >
-                      Clear all
-                    </Button>
-                  )}
                 </div>
-              </div>
 
-              {/* Notifications list */}
-              <div className="max-h-[32rem] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/30">
-                {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center gap-3 py-12">
-                    <div className="flex size-16 items-center justify-center rounded-full bg-muted/30">
-                      <Bell className="size-8 text-muted-foreground/50" />
+                {/* Notifications list */}
+                <ScrollArea className="macos-window-scrollbar max-h-[32rem]">
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-3 py-12">
+                      <div className="flex size-16 items-center justify-center rounded-full bg-muted/30">
+                        <Bell className="size-8 text-muted-foreground/50" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">
+                          No notifications
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          You&apos;re all caught up!
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">
-                        No notifications
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        You&apos;re all caught up!
-                      </p>
+                  ) : (
+                    <div className="space-y-2 p-3">
+                      {notifications.map((notification, index) => (
+                        <motion.div
+                          key={notification.id}
+                          initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
+                        >
+                          <NotificationItem
+                            notification={notification}
+                            onAction={handleNotificationClick}
+                          />
+                        </motion.div>
+                      ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2 p-3">
-                    {notifications.map((notification, index) => (
-                      <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-                        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
-                      >
-                        <NotificationItem
-                          notification={notification}
-                          onAction={handleNotificationClick}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+                  )}
+                </ScrollArea>
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </WindowPortal>
   );
 }

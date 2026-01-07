@@ -29,6 +29,8 @@ import { useUpdateNotification, useNotifications } from "~/lib/notifications";
 import { parseTransactionError, useBridgeStore } from "~/lib/bridge";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { WindowPortal } from "~/components/ui/window-portal";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 // Container component that renders all open transaction windows
 export function TransactionWindows() {
@@ -43,19 +45,21 @@ export function TransactionWindows() {
   if (windows.length === 0) return null;
 
   return (
-    <AnimatePresence>
-      {windows.map((window) => (
-        <MultiWindowBridgeProgress
-          key={window.transactionId}
-          transactionWindow={window}
-          onClose={() => closeTransactionWindow(window.transactionId)}
-          onFocus={() => focusTransactionWindow(window.transactionId)}
-          onPositionChange={(position) =>
-            updateWindowPosition(window.transactionId, position)
-          }
-        />
-      ))}
-    </AnimatePresence>
+    <WindowPortal>
+      <AnimatePresence>
+        {windows.map((window) => (
+          <MultiWindowBridgeProgress
+            key={window.transactionId}
+            transactionWindow={window}
+            onClose={() => closeTransactionWindow(window.transactionId)}
+            onFocus={() => focusTransactionWindow(window.transactionId)}
+            onPositionChange={(position) =>
+              updateWindowPosition(window.transactionId, position)
+            }
+          />
+        ))}
+      </AnimatePresence>
+    </WindowPortal>
   );
 }
 
@@ -395,7 +399,8 @@ function MultiWindowBridgeProgress({
           transition={{ duration: 0.2 }}
           className="overflow-hidden"
         >
-          <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 max-h-[70vh] space-y-3 overflow-y-auto p-5">
+          <ScrollArea className="macos-window-scrollbar max-h-[70vh]">
+            <div className="space-y-3 p-5">
             {/* Transaction header */}
             <div className="space-y-2">
               {/* Amount and route */}
@@ -604,7 +609,8 @@ function MultiWindowBridgeProgress({
                 ))}
               </div>
             </div>
-          </div>
+            </div>
+          </ScrollArea>
         </motion.div>
       </div>
     </motion.div>
