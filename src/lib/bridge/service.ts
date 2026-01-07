@@ -1,14 +1,3 @@
-/**
- * CCTP Bridge Service - Refactored with best practices
- *
- * Architecture Principles:
- * 1. Dependency Injection - Services are injected, not hardcoded
- * 2. Single Responsibility - Each class has one job
- * 3. Open/Closed - Open for extension (new chains), closed for modification
- * 4. Proper typing - No type assertions or shortcuts
- * 5. Error handling - Comprehensive error messages and recovery
- */
-
 import { BridgeKit, type BridgeResult } from "@circle-fin/bridge-kit";
 import type { AdapterContext } from "@circle-fin/bridge-kit";
 import { nanoid } from "nanoid";
@@ -91,8 +80,7 @@ export class CCTPBridgeService implements IBridgeService {
       throw new Error("Address is required");
     }
 
-    // Normalize userAddress to lowercase for consistent storage queries
-    this.userAddress = wallet?.address?.toLowerCase() ?? null;
+    this.userAddress = wallet?.address ?? null;
     this.wallet = wallet ?? null;
     this.wallets = allWallets ?? (wallet ? [wallet] : []);
 
@@ -382,7 +370,10 @@ export class CCTPBridgeService implements IBridgeService {
         (s) => s.name.toLowerCase() === step.name.toLowerCase(),
       );
 
-      if (sdkStep && (sdkStep.state === "success" || sdkStep.state === "noop")) {
+      if (
+        sdkStep &&
+        (sdkStep.state === "success" || sdkStep.state === "noop")
+      ) {
         return {
           ...step,
           status: "completed" as const,
@@ -788,7 +779,9 @@ export class CCTPBridgeService implements IBridgeService {
       // it means it was attempted, which means attestation completed
       if (
         stepName === "mint" &&
-        (resultStep.state === "success" || resultStep.state === "pending" || resultStep.state === "error")
+        (resultStep.state === "success" ||
+          resultStep.state === "pending" ||
+          resultStep.state === "error")
       ) {
         mintStartedOrCompleted = true;
       }
@@ -813,9 +806,15 @@ export class CCTPBridgeService implements IBridgeService {
             let message = "Transaction step failed";
             if ("message" in errorObj && typeof errorObj.message === "string") {
               message = errorObj.message;
-            } else if ("reason" in errorObj && typeof errorObj.reason === "string") {
+            } else if (
+              "reason" in errorObj &&
+              typeof errorObj.reason === "string"
+            ) {
               message = errorObj.reason;
-            } else if ("code" in errorObj && typeof errorObj.code === "string") {
+            } else if (
+              "code" in errorObj &&
+              typeof errorObj.code === "string"
+            ) {
               message = errorObj.code;
             }
             matchingStep.error = message;

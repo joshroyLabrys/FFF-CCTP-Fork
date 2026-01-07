@@ -47,12 +47,24 @@ export interface BridgeState {
   // Multi-window transaction panels
   openTransactionWindows: Map<string, TransactionWindow>;
   nextZIndex: number;
-  openTransactionWindow: (transaction: BridgeTransaction, position?: WindowPosition) => void;
+  openTransactionWindow: (
+    transaction: BridgeTransaction,
+    position?: WindowPosition,
+  ) => void;
   closeTransactionWindow: (transactionId: string) => void;
   focusTransactionWindow: (transactionId: string) => void;
-  updateTransactionWindowPosition: (transactionId: string, position: WindowPosition) => void;
-  updateTransactionInWindow: (transactionId: string, updates: Partial<BridgeTransaction>) => void;
-  minimizeTransactionWindow: (transactionId: string, isMinimized: boolean) => void;
+  updateTransactionWindowPosition: (
+    transactionId: string,
+    position: WindowPosition,
+  ) => void;
+  updateTransactionInWindow: (
+    transactionId: string,
+    updates: Partial<BridgeTransaction>,
+  ) => void;
+  minimizeTransactionWindow: (
+    transactionId: string,
+    isMinimized: boolean,
+  ) => void;
 
   // Transaction history (in-memory cache)
   transactions: BridgeTransaction[];
@@ -64,10 +76,7 @@ export interface BridgeState {
   activeWindow: WindowType | null;
   setActiveWindow: (window: WindowType | null) => void;
   windowPositions: Record<WindowType, WindowPosition>;
-  setWindowPosition: (
-    window: WindowType,
-    position: WindowPosition
-  ) => void;
+  setWindowPosition: (window: WindowType, position: WindowPosition) => void;
 
   // Loading states
   isLoading: boolean;
@@ -115,10 +124,8 @@ export const useBridgeStore = create<BridgeState>()(
 
       // User
       setUserAddress: (address) => {
-        // Normalize address to lowercase for consistency
-        const normalizedAddress = address?.toLowerCase() ?? null;
-        set({ userAddress: normalizedAddress });
-        if (normalizedAddress) {
+        set({ userAddress: address ?? null });
+        if (address) {
           void get().loadTransactions();
         } else {
           set({ transactions: [] });
@@ -164,7 +171,7 @@ export const useBridgeStore = create<BridgeState>()(
         const offset = windowCount * 30; // Cascade windows
         const defaultPosition = {
           x: 400 + offset,
-          y: 150 + offset
+          y: 150 + offset,
         };
 
         const newWindow: TransactionWindow = {
@@ -336,7 +343,10 @@ export const useBridgeStore = create<BridgeState>()(
       }),
       onRehydrateStorage: () => (state) => {
         // Called after store is rehydrated from localStorage
-        console.log('[Store] Rehydrated from localStorage:', state?.windowPositions);
+        console.log(
+          "[Store] Rehydrated from localStorage:",
+          state?.windowPositions,
+        );
         state?.setHasHydrated(true);
       },
     },

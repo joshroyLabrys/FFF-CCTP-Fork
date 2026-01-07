@@ -30,12 +30,10 @@ async function getDB(): Promise<IDBPDatabase<BridgeDB>> {
 
   dbInstance = await openDB<BridgeDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
-      // Create transactions store
       const txStore = db.createObjectStore("transactions", {
         keyPath: "id",
       });
 
-      // Create indexes
       txStore.createIndex("by-user", "userAddress");
       txStore.createIndex("by-status", "status");
       txStore.createIndex("by-user-and-status", ["userAddress", "status"]);
@@ -75,12 +73,7 @@ export class BridgeStorage {
     userAddress: string,
   ): Promise<BridgeTransaction[]> {
     const db = await getDB();
-    // Normalize address to lowercase for consistency
-    return db.getAllFromIndex(
-      "transactions",
-      "by-user",
-      userAddress.toLowerCase(),
-    );
+    return db.getAllFromIndex("transactions", "by-user", userAddress);
   }
 
   /**
@@ -91,9 +84,8 @@ export class BridgeStorage {
     status: string,
   ): Promise<BridgeTransaction[]> {
     const db = await getDB();
-    // Normalize address to lowercase for consistency
     return db.getAllFromIndex("transactions", "by-user-and-status", [
-      userAddress.toLowerCase(),
+      userAddress,
       status,
     ]);
   }
@@ -106,11 +98,10 @@ export class BridgeStorage {
     limit = 10,
   ): Promise<BridgeTransaction[]> {
     const db = await getDB();
-    // Normalize address to lowercase for consistency
     const allTxs = await db.getAllFromIndex(
       "transactions",
       "by-user",
-      userAddress.toLowerCase(),
+      userAddress,
     );
 
     // Sort by createdAt descending and limit
@@ -172,11 +163,10 @@ export class BridgeStorage {
    */
   static async clearUserTransactions(userAddress: string): Promise<void> {
     const db = await getDB();
-    // Normalize address to lowercase for consistency
     const txs = await db.getAllFromIndex(
       "transactions",
       "by-user",
-      userAddress.toLowerCase(),
+      userAddress,
     );
 
     const deletePromises = txs.map((tx) => db.delete("transactions", tx.id));
@@ -190,11 +180,10 @@ export class BridgeStorage {
     userAddress: string,
   ): Promise<BridgeTransaction[]> {
     const db = await getDB();
-    // Normalize address to lowercase for consistency
     const failedTxs = await db.getAllFromIndex(
       "transactions",
       "by-user-and-status",
-      [userAddress.toLowerCase(), "failed"],
+      [userAddress, "failed"],
     );
 
     // Filter transactions that have actionable failures
