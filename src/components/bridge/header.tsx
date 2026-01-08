@@ -1,6 +1,11 @@
 "use client";
 
-import { motion, AnimatePresence, useDragControls } from "motion/react";
+import {
+  motion,
+  AnimatePresence,
+  useDragControls,
+  LayoutGroup,
+} from "motion/react";
 import { useState, useRef, useEffect } from "react";
 import {
   Wallet,
@@ -94,172 +99,193 @@ export function BridgeHeader() {
             <div className="bg-border/30 ml-1 hidden h-4 w-px sm:ml-2 sm:block" />
 
             {/* Menu bar - Desktop only */}
-            <div className="hidden lg:flex lg:items-center lg:gap-1">
-              {/* View menu */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
-                      "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-                    )}
-                  >
-                    View
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
-                >
-                  <DropdownMenuItem
-                    onClick={() =>
-                      setShowTransactionHistory(!showTransactionHistory)
-                    }
-                    className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
-                  >
-                    <History className="mr-2 size-4" />
-                    <span className="text-sm">
-                      {showTransactionHistory ? "Hide" : "Show"} Transaction
-                      History
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Faucet menu - Only visible on testnet */}
-              {environment === "testnet" && (
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
-                        "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-                      )}
+            <LayoutGroup>
+              <div className="hidden lg:flex lg:items-center lg:gap-1">
+                {/* View menu */}
+                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                          "hover:bg-muted/50 focus:ring-0 focus:outline-none",
+                        )}
+                      >
+                        View
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
                     >
-                      Faucet
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
-                  >
-                    <DropdownMenuItem
-                      onClick={() =>
-                        window.open(
-                          "https://faucet.circle.com/",
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      }
-                      className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      <DropdownMenuItem
+                        onClick={() =>
+                          setShowTransactionHistory(!showTransactionHistory)
+                        }
+                        className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      >
+                        <History className="mr-2 size-4" />
+                        <span className="text-sm">
+                          {showTransactionHistory ? "Hide" : "Show"} Transaction
+                          History
+                        </span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </motion.div>
+
+                {/* Faucet menu - Only visible on testnet */}
+                <AnimatePresence mode="popLayout">
+                  {environment === "testnet" && (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9, width: 0 }}
+                      animate={{ opacity: 1, scale: 1, width: "auto" }}
+                      exit={{ opacity: 0, scale: 0.9, width: 0 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      style={{ overflow: "hidden" }}
                     >
-                      <span className="text-sm">Circle Faucet</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                      <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                              "hover:bg-muted/50 focus:ring-0 focus:outline-none",
+                            )}
+                          >
+                            Faucet
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="start"
+                          className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
+                        >
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                "https://faucet.circle.com/",
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                            }
+                            className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                          >
+                            <span className="text-sm">Circle Faucet</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-              {/* Resources menu */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
+                {/* Resources menu */}
+                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                          "hover:bg-muted/50 focus:ring-0 focus:outline-none",
+                        )}
+                      >
+                        Resources
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
+                    >
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            "https://github.com",
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
+                        className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      >
+                        <Github className="mr-2 size-4" />
+                        <span className="text-sm">GitHub</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            "https://twitter.com",
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
+                        className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      >
+                        <Twitter className="mr-2 size-4" />
+                        <span className="text-sm">Twitter</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-border/30" />
+                      <DropdownMenuItem
+                        onClick={() =>
+                          window.open(
+                            "https://developers.circle.com/stablecoins/docs/cctp-getting-started",
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
+                        className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      >
+                        <FileText className="mr-2 size-4" />
+                        <span className="text-sm">CCTP Documentation</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </motion.div>
+
+                {/* Disclaimer button */}
+                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
                   <Button
                     variant="ghost"
+                    onClick={() => setShowDisclaimer(!showDisclaimer)}
                     className={cn(
                       "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
                       "hover:bg-muted/50 focus:ring-0 focus:outline-none",
                     )}
                   >
-                    Resources
+                    Disclaimer
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
-                >
-                  <DropdownMenuItem
-                    onClick={() =>
-                      window.open(
-                        "https://github.com",
-                        "_blank",
-                        "noopener,noreferrer",
-                      )
-                    }
-                    className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
-                  >
-                    <Github className="mr-2 size-4" />
-                    <span className="text-sm">GitHub</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      window.open(
-                        "https://twitter.com",
-                        "_blank",
-                        "noopener,noreferrer",
-                      )
-                    }
-                    className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
-                  >
-                    <Twitter className="mr-2 size-4" />
-                    <span className="text-sm">Twitter</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-border/30" />
-                  <DropdownMenuItem
-                    onClick={() =>
-                      window.open(
-                        "https://developers.circle.com/stablecoins/docs/cctp-getting-started",
-                        "_blank",
-                        "noopener,noreferrer",
-                      )
-                    }
-                    className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
-                  >
-                    <FileText className="mr-2 size-4" />
-                    <span className="text-sm">CCTP Documentation</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </motion.div>
 
-              {/* Disclaimer button */}
-              <Button
-                variant="ghost"
-                onClick={() => setShowDisclaimer(!showDisclaimer)}
-                className={cn(
-                  "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
-                  "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-                )}
-              >
-                Disclaimer
-              </Button>
-
-              {/* Arcade menu */}
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
-                      "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-                    )}
-                  >
-                    Arcade
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
-                >
-                  <DropdownMenuItem
-                    onClick={() => setShowPongGame(!showPongGame)}
-                    className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
-                  >
-                    <Gamepad2 className="mr-2 size-4" />
-                    <span className="text-sm">Pong</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                {/* Arcade menu */}
+                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "text-foreground h-7 rounded-md px-2 text-xs font-medium transition-colors",
+                          "hover:bg-muted/50 focus:ring-0 focus:outline-none",
+                        )}
+                      >
+                        Arcade
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="border-border/50 bg-card/95 w-56 backdrop-blur-xl"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => setShowPongGame(!showPongGame)}
+                        className="text-foreground hover:bg-muted/50 focus:bg-muted/50 cursor-pointer"
+                      >
+                        <Gamepad2 className="mr-2 size-4" />
+                        <span className="text-sm">Pong</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </motion.div>
+              </div>
+            </LayoutGroup>
           </div>
 
           {/* Right section - Controls */}
