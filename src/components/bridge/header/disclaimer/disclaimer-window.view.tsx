@@ -117,9 +117,9 @@ export function DisclaimerWindowView({
                     <strong className="text-foreground">
                       unofficial, open-source user interface
                     </strong>{" "}
-                    for Circle&apos;s Cross-Chain Transfer Protocol (CCTP).
-                    This application is not developed, maintained, or endorsed
-                    by Circle Internet Financial, LLC.
+                    for Circle&apos;s Cross-Chain Transfer Protocol (CCTP). This
+                    application is not developed, maintained, or endorsed by
+                    Circle Internet Financial, LLC.
                   </p>
 
                   <p>

@@ -43,8 +43,8 @@ export function constrainToViewport(
   // x + dimensions.width >= minVisibleWidth
   // x >= minVisibleWidth - dimensions.width
   const minX = Math.max(
-    padding,  // Respect padding when window is mostly visible
-    minVisibleWidth - dimensions.width  // Allow overhang when dragging left
+    padding, // Respect padding when window is mostly visible
+    minVisibleWidth - dimensions.width, // Allow overhang when dragging left
   );
 
   // Right constraint: Keep at least minVisibleWidth visible from the left
@@ -54,7 +54,7 @@ export function constrainToViewport(
   // Use NAVBAR_SAFE_ZONE as minimum Y to prevent windows from going above navbar
   const minY = Math.max(
     NAVBAR_SAFE_ZONE,
-    minVisibleHeight - dimensions.height + NAVBAR_SAFE_ZONE
+    minVisibleHeight - dimensions.height + NAVBAR_SAFE_ZONE,
   );
 
   const maxY = viewportHeight - minVisibleHeight;
@@ -82,7 +82,11 @@ export function isWithinViewport(
   padding = 20,
 ): boolean {
   // Handle undefined/null positions
-  if (!position || typeof position.x !== 'number' || typeof position.y !== 'number') {
+  if (
+    !position ||
+    typeof position.x !== "number" ||
+    typeof position.y !== "number"
+  ) {
     return false;
   }
 
@@ -149,8 +153,8 @@ export const DEFAULT_WINDOW_POSITIONS: Record<WindowType, WindowPosition> = {
   "fee-details": { x: 350, y: 100 },
   "transaction-history": { x: 100, y: 150 },
   "bridge-progress": { x: 400, y: 150 },
-  "disclaimer": { x: 200, y: 150 },
-  "pong": { x: 300, y: 100 },
+  disclaimer: { x: 200, y: 150 },
+  pong: { x: 300, y: 100 },
 };
 
 /**
@@ -171,13 +175,16 @@ export function getWindowDimensions(
     "fee-details": { width: normalWidth, height: 500 },
     "transaction-history": { width: normalWidth, height: 650 },
     "bridge-progress": { width: 500, height: 600 },
-    "disclaimer": { width: 500, height: 450 },
-    "pong": { width: 450, height: 400 },
+    disclaimer: { width: 500, height: 450 },
+    pong: { width: 450, height: 400 },
   };
 
   const dimensions = dimensionsByType[windowType];
 
-  if (isMaximized && (windowType === "fee-details" || windowType === "transaction-history")) {
+  if (
+    isMaximized &&
+    (windowType === "fee-details" || windowType === "transaction-history")
+  ) {
     return { width: maximizedWidth, height: dimensions.height };
   }
 

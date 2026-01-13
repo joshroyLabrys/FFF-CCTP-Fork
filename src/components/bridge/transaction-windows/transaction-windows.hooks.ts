@@ -201,7 +201,9 @@ export function useMultiWindowBridgeProgressState({
     updateNotification,
   ]);
 
-  const fromNetwork = transaction ? NETWORK_CONFIGS[transaction.fromChain] : null;
+  const fromNetwork = transaction
+    ? NETWORK_CONFIGS[transaction.fromChain]
+    : null;
   const toNetwork = transaction ? NETWORK_CONFIGS[transaction.toChain] : null;
 
   const isCompleted = transaction?.status === "completed";

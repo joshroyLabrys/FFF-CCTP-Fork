@@ -4,6 +4,13 @@ import type { Wallet } from "node_modules/@dynamic-labs/sdk-react-core/src/lib/s
 import type { WalletConnectorCore } from "@dynamic-labs/wallet-connector-core";
 
 /**
+ * Transfer method for bridging
+ * - 'standard': Lower fees (0% bridge fee), slower completion (~15-19 min finality)
+ * - 'fast': Higher fees (1-14 bps), faster completion (seconds)
+ */
+export type TransferMethod = "standard" | "fast";
+
+/**
  * Transaction status types
  */
 export type TransactionStatus =
@@ -110,6 +117,8 @@ export interface BridgeParams {
   amount: string;
   token?: string;
   recipientAddress?: string;
+  /** Transfer method: 'standard' (slow, low fees) or 'fast' (quick, higher fees) */
+  transferMethod?: TransferMethod;
   /** Explicit source wallet for signing source chain transactions */
   sourceWallet?: Wallet<WalletConnectorCore.WalletConnector>;
   /** Explicit destination wallet for signing destination chain transactions */

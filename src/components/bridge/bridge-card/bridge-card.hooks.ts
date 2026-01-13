@@ -11,9 +11,12 @@ import {
   useSetFromChain,
   useSetToChain,
   useSwapChains,
+  useTransferMethod,
+  useSetTransferMethod,
   useNetworkAutoSwitch,
   useWalletForNetwork,
   useWalletSelection,
+  useWalletsByType,
   useCurrentTransaction,
   parseTransactionError,
   useBridgeStore,
@@ -44,6 +47,10 @@ export function useBridgeCardState() {
   const setToChain = useSetToChain();
   const swapChains = useSwapChains();
 
+  // Transfer method from store
+  const transferMethod = useTransferMethod();
+  const setTransferMethod = useSetTransferMethod();
+
   // Wallet selection with multiple wallet support
   const walletSelection = useWalletSelection(fromChain, toChain);
   const {
@@ -66,6 +73,21 @@ export function useBridgeCardState() {
     hasCompatibleWallet: hasDestWallet,
     promptWalletConnection: promptDestWalletConnection,
   } = useWalletForNetwork(toNetworkType);
+
+  // Get all connected wallets by type for minting wallet check
+  const walletsByType = useWalletsByType();
+
+  // Check if user has a wallet for the destination network type
+  // This is needed when using custom addresses - user still needs a wallet to sign mint tx
+  const hasWalletForDestNetwork = toNetworkType
+    ? toNetworkType === "evm"
+      ? walletsByType.ethereum.length > 0
+      : toNetworkType === "solana"
+        ? walletsByType.solana.length > 0
+        : toNetworkType === "sui"
+          ? walletsByType.sui.length > 0
+          : false
+    : false;
 
   // Local state
   const [amount, setAmount] = useState("");
@@ -114,6 +136,7 @@ export function useBridgeCardState() {
         toChain,
         amount,
         recipientAddress: useCustomAddress ? customAddress : undefined,
+        transferMethod,
       });
     }
   }, [
@@ -122,6 +145,7 @@ export function useBridgeCardState() {
     amount,
     useCustomAddress,
     customAddress,
+    transferMethod,
     estimateBridge,
   ]);
 
@@ -160,6 +184,7 @@ export function useBridgeCardState() {
         toChain,
         amount,
         recipientAddress: useCustomAddress ? customAddress : undefined,
+        transferMethod,
         // Pass explicit wallet references for cross-chain network switching
         sourceWallet: selectedSourceWalletFull,
         destWallet: selectedDestWalletFull,
@@ -225,6 +250,7 @@ export function useBridgeCardState() {
     useCustomAddress,
     customAddress,
     isAddressValid,
+    transferMethod,
     hasDestWallet,
     promptDestWalletConnection,
     addNotification,
@@ -238,21 +264,35 @@ export function useBridgeCardState() {
 
   const isValidAmount = Boolean(amount && parseFloat(amount) > 0);
 
+  // When using custom address, user still needs a wallet of the destination chain type
+  // to sign the mint transaction (even though funds go to custom recipient)
   const canBridge = Boolean(
     isInitialized &&
-      fromChain &&
-      toChain &&
-      isValidAmount &&
-      !isBridging &&
-      (useCustomAddress ? isAddressValid : hasDestWallet),
+    fromChain &&
+    toChain &&
+    isValidAmount &&
+    !isBridging &&
+    (useCustomAddress
+      ? isAddressValid && hasWalletForDestNetwork
+      : hasDestWallet),
   );
 
   const needsDestinationWallet = Boolean(
     toChain && !hasDestWallet && !useCustomAddress,
   );
 
+  // Show warning when using custom address but no wallet to sign mint tx
+  const needsWalletForMinting = Boolean(
+    useCustomAddress && toChain && isAddressValid && !hasWalletForDestNetwork,
+  );
+
+  // Get destination network display name for warning message
+  const destNetworkName = toChain ? NETWORK_CONFIGS[toChain]?.name : undefined;
+
   return {
     isInitialized,
+    transferMethod,
+    onTransferMethodChange: setTransferMethod,
     fromChain,
     toChain,
     onFromChainChange: setFromChain,
@@ -286,6 +326,8 @@ export function useBridgeCardState() {
     isBridging,
     canBridge,
     needsDestinationWallet,
+    needsWalletForMinting,
+    destNetworkName,
     onBridge: handleBridge,
     onPromptDestWallet: promptDestWalletConnection,
     bridgeCardRef,

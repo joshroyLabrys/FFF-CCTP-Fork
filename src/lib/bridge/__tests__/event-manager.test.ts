@@ -19,7 +19,7 @@ const createMockStorage = () => ({
 
 // Helper to create a mock transaction
 function createMockTransaction(
-  overrides: Partial<BridgeTransaction> = {}
+  overrides: Partial<BridgeTransaction> = {},
 ): BridgeTransaction {
   return {
     id: "test-tx-id",
@@ -30,9 +30,19 @@ function createMockTransaction(
     token: "USDC",
     status: "bridging",
     steps: [
-      { id: "approve", name: "Approve", status: "pending", timestamp: Date.now() },
+      {
+        id: "approve",
+        name: "Approve",
+        status: "pending",
+        timestamp: Date.now(),
+      },
       { id: "burn", name: "Burn", status: "pending", timestamp: Date.now() },
-      { id: "attestation", name: "Attestation", status: "pending", timestamp: Date.now() },
+      {
+        id: "attestation",
+        name: "Attestation",
+        status: "pending",
+        timestamp: Date.now(),
+      },
       { id: "mint", name: "Mint", status: "pending", timestamp: Date.now() },
     ],
     createdAt: Date.now(),
@@ -45,18 +55,23 @@ describe("BridgeEventManager", () => {
   let mockKit: ReturnType<typeof createMockBridgeKit>;
   let mockStorage: ReturnType<typeof createMockStorage>;
   let eventManager: BridgeEventManager;
-  let eventHandler: (event: { method: string; values?: Record<string, unknown> }) => void;
+  let eventHandler: (event: {
+    method: string;
+    values?: Record<string, unknown>;
+  }) => void;
 
   beforeEach(() => {
     mockKit = createMockBridgeKit();
     mockStorage = createMockStorage();
 
     // Capture the event handler when it's registered
-    mockOn.mockImplementation((eventName: string, handler: typeof eventHandler) => {
-      if (eventName === "*") {
-        eventHandler = handler;
-      }
-    });
+    mockOn.mockImplementation(
+      (eventName: string, handler: typeof eventHandler) => {
+        if (eventName === "*") {
+          eventHandler = handler;
+        }
+      },
+    );
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
     eventManager = new BridgeEventManager(mockKit as any, mockStorage as any);
@@ -131,7 +146,8 @@ describe("BridgeEventManager", () => {
 
       // Check that storage was updated
       expect(mockStorage.saveTransaction).toHaveBeenCalled();
-      const savedTx = mockStorage.saveTransaction.mock.calls[0]![0] as BridgeTransaction;
+      const savedTx = mockStorage.saveTransaction.mock
+        .calls[0]![0] as BridgeTransaction;
       const approveStep = savedTx.steps.find((s) => s.id === "approve");
       expect(approveStep!.status).toBe("completed");
       expect(approveStep!.txHash).toBe("0xapprove123");
@@ -150,7 +166,8 @@ describe("BridgeEventManager", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const savedTx = mockStorage.saveTransaction.mock.calls[0]![0] as BridgeTransaction;
+      const savedTx = mockStorage.saveTransaction.mock
+        .calls[0]![0] as BridgeTransaction;
       const burnStep = savedTx.steps.find((s) => s.id === "burn");
       expect(burnStep!.status).toBe("completed");
       expect(burnStep!.txHash).toBe("0xburn456");
@@ -172,7 +189,8 @@ describe("BridgeEventManager", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const savedTx = mockStorage.saveTransaction.mock.calls[0]![0] as BridgeTransaction;
+      const savedTx = mockStorage.saveTransaction.mock
+        .calls[0]![0] as BridgeTransaction;
       expect(savedTx.attestationHash).toBe("attestation-hash-123");
     });
 
@@ -189,7 +207,8 @@ describe("BridgeEventManager", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const savedTx = mockStorage.saveTransaction.mock.calls[0]![0] as BridgeTransaction;
+      const savedTx = mockStorage.saveTransaction.mock
+        .calls[0]![0] as BridgeTransaction;
       const mintStep = savedTx.steps.find((s) => s.id === "mint");
       expect(mintStep!.status).toBe("completed");
       expect(mintStep!.txHash).toBe("0xmint789");
@@ -200,10 +219,30 @@ describe("BridgeEventManager", () => {
       const tx = createMockTransaction({
         id: "tx-123",
         steps: [
-          { id: "approve", name: "Approve", status: "in_progress", timestamp: Date.now() },
-          { id: "burn", name: "Burn", status: "pending", timestamp: Date.now() },
-          { id: "attestation", name: "Attestation", status: "pending", timestamp: Date.now() },
-          { id: "mint", name: "Mint", status: "pending", timestamp: Date.now() },
+          {
+            id: "approve",
+            name: "Approve",
+            status: "in_progress",
+            timestamp: Date.now(),
+          },
+          {
+            id: "burn",
+            name: "Burn",
+            status: "pending",
+            timestamp: Date.now(),
+          },
+          {
+            id: "attestation",
+            name: "Attestation",
+            status: "pending",
+            timestamp: Date.now(),
+          },
+          {
+            id: "mint",
+            name: "Mint",
+            status: "pending",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -216,7 +255,8 @@ describe("BridgeEventManager", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      const savedTx = mockStorage.saveTransaction.mock.calls[0]![0] as BridgeTransaction;
+      const savedTx = mockStorage.saveTransaction.mock
+        .calls[0]![0] as BridgeTransaction;
 
       // Approve should be completed
       const approveStep = savedTx.steps.find((s) => s.id === "approve");
@@ -240,7 +280,7 @@ describe("BridgeEventManager", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       expect(callback).toHaveBeenCalledWith(
-        expect.objectContaining({ id: "tx-123" })
+        expect.objectContaining({ id: "tx-123" }),
       );
     });
 

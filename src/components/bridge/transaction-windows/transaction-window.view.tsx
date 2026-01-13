@@ -75,7 +75,7 @@ export function TransactionWindowView({
         damping: 30,
         stiffness: 300,
       }}
-      className="fixed left-0 top-0"
+      className="fixed top-0 left-0"
       style={{
         touchAction: "none",
         zIndex: zIndex,
@@ -261,7 +261,7 @@ export function TransactionWindowView({
 
               {/* Steps */}
               <div className="space-y-2">
-                <h4 className="text-muted-foreground px-1 text-[10px] font-semibold uppercase tracking-wider">
+                <h4 className="text-muted-foreground px-1 text-[10px] font-semibold tracking-wider uppercase">
                   Transaction Steps
                 </h4>
                 <div className="relative space-y-2">
@@ -354,7 +354,9 @@ export function TransactionWindowView({
                               </button>
                               <a
                                 href={getExplorerTxUrl(
-                                  step.id === "mint" ? transaction.toChain : transaction.fromChain,
+                                  step.id === "mint"
+                                    ? transaction.toChain
+                                    : transaction.fromChain,
                                   step.txHash,
                                 )}
                                 target="_blank"

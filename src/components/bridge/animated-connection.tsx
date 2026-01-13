@@ -15,7 +15,9 @@ export function AnimatedConnection({
   containerRef,
 }: AnimatedConnectionProps) {
   const [path, setPath] = useState("");
-  const [particles, setParticles] = useState<Array<{ id: number; delay: number }>>([]);
+  const [particles, setParticles] = useState<
+    Array<{ id: number; delay: number }>
+  >([]);
 
   useEffect(() => {
     const updatePath = () => {
@@ -103,7 +105,11 @@ export function AnimatedConnection({
             offsetPath: `path('${path}')`,
           }}
         >
-          <animateMotion dur="3s" repeatCount="indefinite" begin={`${particle.delay}s`}>
+          <animateMotion
+            dur="3s"
+            repeatCount="indefinite"
+            begin={`${particle.delay}s`}
+          >
             <mpath href="#connectionPath" />
           </animateMotion>
         </motion.circle>
@@ -114,7 +120,13 @@ export function AnimatedConnection({
 
       {/* Gradient definitions */}
       <defs>
-        <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <linearGradient
+          id="connectionGradient"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="0%"
+        >
           <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
           <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.7" />
           <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />

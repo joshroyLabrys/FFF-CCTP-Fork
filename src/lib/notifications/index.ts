@@ -2,7 +2,12 @@
  * Notifications module exports
  */
 
-export type { Notification, NotificationType, NotificationStatus, NotificationAction } from "./types";
+export type {
+  Notification,
+  NotificationType,
+  NotificationStatus,
+  NotificationAction,
+} from "./types";
 
 export {
   useNotificationStore,

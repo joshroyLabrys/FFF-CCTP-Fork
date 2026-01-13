@@ -10,11 +10,16 @@ import type {
   BridgeParams,
   BridgeTransaction,
   IBridgeService,
+  TransferMethod,
 } from "./types";
 import { BridgeStorage } from "./storage";
 import { NETWORK_CONFIGS, isRouteSupported } from "./networks";
 import type { SupportedChainId } from "./networks";
-import { getAdapterFactory, type AdapterFactory, EVMAdapterCreator } from "./adapters/factory";
+import {
+  getAdapterFactory,
+  type AdapterFactory,
+  EVMAdapterCreator,
+} from "./adapters/factory";
 import { getBalanceService, type BalanceService } from "./balance/service";
 import type { TokenBalance } from "./balance/service";
 import { getAttestationTime } from "./attestation-times";
@@ -42,8 +47,20 @@ interface BridgeOperationContext {
   amount: string;
   token: string;
   recipientAddress?: string;
+  transferSpeed: "FAST" | "SLOW";
   fromAdapter: AdapterContext["adapter"];
   toAdapter: AdapterContext["adapter"];
+}
+
+/**
+ * Map transfer method to Bridge Kit's transfer speed
+ * - 'standard' -> 'SLOW' (0% bridge fee, ~15-19 min finality)
+ * - 'fast' -> 'FAST' (1-14 bps fee, seconds)
+ */
+function getTransferSpeed(
+  method: TransferMethod = "standard",
+): "FAST" | "SLOW" {
+  return method === "fast" ? "FAST" : "SLOW";
 }
 
 /**
@@ -204,6 +221,7 @@ export class CCTPBridgeService implements IBridgeService {
     const toAdapter = await this.getAdapterForChain(params.toChain);
 
     try {
+      const transferSpeed = getTransferSpeed(params.transferMethod);
       const estimate = await this.kit.estimate({
         from: { adapter: fromAdapter, chain: params.fromChain },
         to: {
@@ -214,6 +232,7 @@ export class CCTPBridgeService implements IBridgeService {
           }),
         },
         amount: params.amount,
+        config: { transferSpeed },
       });
 
       // Process the estimate result
@@ -607,7 +626,11 @@ export class CCTPBridgeService implements IBridgeService {
     }
 
     // Similarly handle source chain EVM network switching if needed
-    if (fromNetwork.type === "evm" && fromNetwork.evmChainId && params.sourceWallet) {
+    if (
+      fromNetwork.type === "evm" &&
+      fromNetwork.evmChainId &&
+      params.sourceWallet
+    ) {
       console.log(
         `[Bridge Service] Switching source EVM wallet to chain ${fromNetwork.evmChainId} (${params.fromChain})`,
       );
@@ -635,6 +658,7 @@ export class CCTPBridgeService implements IBridgeService {
       amount: params.amount,
       token: params.token ?? "USDC",
       recipientAddress: params.recipientAddress,
+      transferSpeed: getTransferSpeed(params.transferMethod),
       fromAdapter,
       toAdapter,
     };
@@ -717,6 +741,7 @@ export class CCTPBridgeService implements IBridgeService {
       },
       amount: context.amount,
       token: "USDC",
+      config: { transferSpeed: context.transferSpeed },
     });
 
     // Store the bridge result for potential retry

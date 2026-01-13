@@ -129,7 +129,7 @@ describe("CCTPBridgeService", () => {
 
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       // The address should be preserved as-is (not lowercased)
@@ -143,7 +143,7 @@ describe("CCTPBridgeService", () => {
 
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       // The Solana address should be preserved exactly (case-sensitive Base58)
@@ -152,7 +152,7 @@ describe("CCTPBridgeService", () => {
 
       // Verify it wasn't lowercased (which would break Solana)
       expect(mockStorage.getTransactionsByUser).not.toHaveBeenCalledWith(
-        address.toLowerCase()
+        address.toLowerCase(),
       );
     });
 
@@ -161,17 +161,19 @@ describe("CCTPBridgeService", () => {
 
       await expect(
         service.initialize(
-          wallet as unknown as Parameters<typeof service.initialize>[0]
-        )
+          wallet as unknown as Parameters<typeof service.initialize>[0],
+        ),
       ).rejects.toThrow("Address is required");
     });
 
     it("should clear adapter cache on initialization", async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
 
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       expect(mockAdapterFactory.clearCache).toHaveBeenCalled();
@@ -180,10 +182,12 @@ describe("CCTPBridgeService", () => {
 
   describe("estimate", () => {
     beforeEach(async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
     });
 
@@ -208,7 +212,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Base",
           amount: "100.00",
-        })
+        }),
       ).rejects.toThrow("Bridge service not initialized");
     });
 
@@ -218,7 +222,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Ethereum",
           amount: "100.00",
-        })
+        }),
       ).rejects.toThrow("Source and destination chains must be different");
     });
 
@@ -228,7 +232,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Base",
           amount: "0",
-        })
+        }),
       ).rejects.toThrow("Amount must be greater than 0");
 
       await expect(
@@ -236,7 +240,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Base",
           amount: "-10",
-        })
+        }),
       ).rejects.toThrow("Amount must be greater than 0");
     });
 
@@ -246,17 +250,19 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Base",
           amount: "100.1234567", // 7 decimals, max is 6 for USDC
-        })
+        }),
       ).rejects.toThrow("Amount has too many decimal places");
     });
   });
 
   describe("bridge", () => {
     beforeEach(async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
     });
 
@@ -279,7 +285,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Ethereum_Sepolia", // Cross-environment not supported
           amount: "100.00",
-        })
+        }),
       ).rejects.toThrow("Route not supported");
     });
 
@@ -291,7 +297,7 @@ describe("CCTPBridgeService", () => {
           fromChain: "Ethereum",
           toChain: "Base",
           amount: "100.00",
-        })
+        }),
       ).rejects.toThrow("Bridge service not initialized");
     });
 
@@ -311,10 +317,12 @@ describe("CCTPBridgeService", () => {
 
   describe("retry", () => {
     beforeEach(async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
     });
 
@@ -322,7 +330,7 @@ describe("CCTPBridgeService", () => {
       service.reset();
 
       await expect(service.retry("tx-123")).rejects.toThrow(
-        "Bridge service not initialized"
+        "Bridge service not initialized",
       );
     });
 
@@ -330,7 +338,7 @@ describe("CCTPBridgeService", () => {
       mockStorage.getTransaction.mockResolvedValue(undefined);
 
       await expect(service.retry("non-existent")).rejects.toThrow(
-        "Transaction not found"
+        "Transaction not found",
       );
     });
 
@@ -343,7 +351,7 @@ describe("CCTPBridgeService", () => {
       });
 
       await expect(service.retry("tx-123")).rejects.toThrow(
-        "Transaction does not belong to current user"
+        "Transaction does not belong to current user",
       );
     });
 
@@ -356,7 +364,7 @@ describe("CCTPBridgeService", () => {
       });
 
       await expect(service.retry("tx-123")).rejects.toThrow(
-        "Only failed transactions can be retried"
+        "Only failed transactions can be retried",
       );
     });
 
@@ -369,17 +377,19 @@ describe("CCTPBridgeService", () => {
       });
 
       await expect(service.retry("tx-123")).rejects.toThrow(
-        "Cannot retry: original bridge result not found"
+        "Cannot retry: original bridge result not found",
       );
     });
   });
 
   describe("getBalance", () => {
     beforeEach(async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
     });
 
@@ -391,7 +401,7 @@ describe("CCTPBridgeService", () => {
       expect(mockBalanceService.getUSDCBalance).toHaveBeenCalledWith(
         expect.anything(),
         "Ethereum",
-        "0x1234567890123456789012345678901234567890"
+        "0x1234567890123456789012345678901234567890",
       );
     });
 
@@ -399,7 +409,7 @@ describe("CCTPBridgeService", () => {
       service.reset();
 
       await expect(service.getBalance("Ethereum")).rejects.toThrow(
-        "Service not initialized"
+        "Service not initialized",
       );
     });
   });
@@ -412,19 +422,21 @@ describe("CCTPBridgeService", () => {
     });
 
     it("should return true for valid testnet routes", async () => {
-      expect(await service.supportsRoute("Ethereum_Sepolia", "Base_Sepolia")).toBe(
-        true
-      );
-      expect(await service.supportsRoute("Ethereum_Sepolia", "Solana_Devnet")).toBe(
-        true
-      );
+      expect(
+        await service.supportsRoute("Ethereum_Sepolia", "Base_Sepolia"),
+      ).toBe(true);
+      expect(
+        await service.supportsRoute("Ethereum_Sepolia", "Solana_Devnet"),
+      ).toBe(true);
     });
 
     it("should return false for cross-environment routes", async () => {
       expect(await service.supportsRoute("Ethereum", "Ethereum_Sepolia")).toBe(
-        false
+        false,
       );
-      expect(await service.supportsRoute("Solana", "Solana_Devnet")).toBe(false);
+      expect(await service.supportsRoute("Solana", "Solana_Devnet")).toBe(
+        false,
+      );
     });
 
     it("should return false for same chain routes", async () => {
@@ -440,10 +452,12 @@ describe("CCTPBridgeService", () => {
     });
 
     it("should return user transactions when initialized", async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       const mockTxs: BridgeTransaction[] = [
@@ -466,17 +480,19 @@ describe("CCTPBridgeService", () => {
 
       expect(transactions).toEqual(mockTxs);
       expect(mockStorage.getTransactionsByUser).toHaveBeenCalledWith(
-        "0x1234567890123456789012345678901234567890"
+        "0x1234567890123456789012345678901234567890",
       );
     });
   });
 
   describe("reset", () => {
     it("should clear user address and wallet", async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       service.reset();
@@ -487,10 +503,12 @@ describe("CCTPBridgeService", () => {
     });
 
     it("should clear adapter cache", async () => {
-      const wallet = createMockWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
       await service.initialize(
         wallet as unknown as Parameters<typeof service.initialize>[0],
-        [wallet] as unknown as Parameters<typeof service.initialize>[1]
+        [wallet] as unknown as Parameters<typeof service.initialize>[1],
       );
 
       service.reset();

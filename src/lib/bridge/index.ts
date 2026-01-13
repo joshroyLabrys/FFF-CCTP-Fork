@@ -4,20 +4,14 @@
  */
 
 // Core service
-export {
-  getBridgeService,
-  CCTPBridgeService,
-} from "./service";
+export { getBridgeService, CCTPBridgeService } from "./service";
 export type { BridgeServiceConfig } from "./service";
 
 // Event manager
 export { BridgeEventManager } from "./event-manager";
 
 // Adapter factory
-export {
-  getAdapterFactory,
-  AdapterFactory,
-} from "./adapters/factory";
+export { getAdapterFactory, AdapterFactory } from "./adapters/factory";
 export type { IAdapterCreator } from "./adapters/factory";
 
 // Balance service
@@ -36,7 +30,11 @@ export {
   NAVBAR_HEIGHT,
   NAVBAR_SAFE_ZONE,
 } from "./window-utils";
-export type { WindowDimensions, WindowPosition, WindowType } from "./window-utils";
+export type {
+  WindowDimensions,
+  WindowPosition,
+  WindowType,
+} from "./window-utils";
 
 // Hooks
 export {
@@ -44,10 +42,9 @@ export {
   useBridgeEstimate,
   useBridge,
   useRetryBridge,
-  useRouteSupport,
-  useWalletBalance,
   useTransactionHistory,
   useNetworkAutoSwitch,
+  useWalletBalance,
   useWalletForNetwork,
   useWalletSelection,
   useWalletsByType,
@@ -85,17 +82,15 @@ export { useBridgeStore } from "./store";
 export {
   useEnvironment,
   useSetEnvironment,
+  useTransferMethod,
+  useSetTransferMethod,
   useUserAddress,
-  useSetUserAddress,
   useFromChain,
   useToChain,
   useSetFromChain,
   useSetToChain,
   useSwapChains,
   useCurrentTransaction,
-  useTransactions,
-  useIsLoading,
-  useError,
   useActiveWindow,
   useSetActiveWindow,
   useWindowPositions,
@@ -116,6 +111,7 @@ export type { TransactionWindow } from "./store";
 
 // Types
 export type {
+  TransferMethod,
   TransactionStatus,
   BridgeStep,
   BridgeTransaction,
@@ -140,5 +136,3 @@ export type {
   NetworkType,
   NetworkConfig,
 } from "./networks";
-
-

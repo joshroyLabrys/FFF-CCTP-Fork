@@ -4,7 +4,10 @@ import { useWalletSelectorState } from "./wallet-selector.hooks";
 import { WalletSelectorView } from "./wallet-selector.view";
 import type { WalletSelectorProps } from "./wallet-selector.types";
 
-export type { WalletSelectorProps, WalletOption } from "./wallet-selector.types";
+export type {
+  WalletSelectorProps,
+  WalletOption,
+} from "./wallet-selector.types";
 
 export function WalletSelector({
   wallets,

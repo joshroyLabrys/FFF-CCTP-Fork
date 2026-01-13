@@ -29,7 +29,7 @@ export function ThemeToggleView({
       onClick={toggleTheme}
       aria-label="Toggle theme"
       type="button"
-      className="flex items-center justify-center rounded-md p-1.5 transition-colors hover:bg-muted/50 focus:outline-none"
+      className="hover:bg-muted/50 flex items-center justify-center rounded-md p-1.5 transition-colors focus:outline-none"
     >
       <AnimatePresence mode="wait" initial={false}>
         {isDark ? (

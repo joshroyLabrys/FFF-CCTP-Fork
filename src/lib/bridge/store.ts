@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { NetworkEnvironment, SupportedChainId } from "./networks";
-import type { BridgeTransaction } from "./types";
+import type { BridgeTransaction, TransferMethod } from "./types";
 import { BridgeStorage } from "./storage";
 import type { WindowPosition, WindowType } from "./window-utils";
 import { DEFAULT_WINDOW_POSITIONS } from "./window-utils";
@@ -28,6 +28,10 @@ export interface BridgeState {
   // Network environment
   environment: NetworkEnvironment;
   setEnvironment: (environment: NetworkEnvironment) => void;
+
+  // Transfer method (standard = slow/cheap, fast = quick/higher fees)
+  transferMethod: TransferMethod;
+  setTransferMethod: (method: TransferMethod) => void;
 
   // User state
   userAddress: string | null;
@@ -103,6 +107,7 @@ export const useBridgeStore = create<BridgeState>()(
       // Initial state
       _hasHydrated: false,
       environment: "testnet",
+      transferMethod: "standard",
       userAddress: null,
       fromChain: null,
       toChain: null,
@@ -116,8 +121,8 @@ export const useBridgeStore = create<BridgeState>()(
         "fee-details": 100,
         "transaction-history": 100,
         "bridge-progress": 100,
-        "disclaimer": 100,
-        "pong": 100,
+        disclaimer: 100,
+        pong: 100,
       },
 
       // Multi-window transaction state
@@ -131,6 +136,9 @@ export const useBridgeStore = create<BridgeState>()(
       setEnvironment: (environment) => {
         set({ environment, fromChain: null, toChain: null });
       },
+
+      // Transfer method
+      setTransferMethod: (transferMethod) => set({ transferMethod }),
 
       // User
       setUserAddress: (address) => {
@@ -361,6 +369,7 @@ export const useBridgeStore = create<BridgeState>()(
       name: "cctp-bridge-storage",
       partialize: (state) => ({
         environment: state.environment,
+        transferMethod: state.transferMethod,
         fromChain: state.fromChain,
         toChain: state.toChain,
         windowPositions: state.windowPositions,
@@ -384,6 +393,11 @@ export const useEnvironment = () =>
   useBridgeStore((state) => state.environment);
 export const useSetEnvironment = () =>
   useBridgeStore((state) => state.setEnvironment);
+
+export const useTransferMethod = () =>
+  useBridgeStore((state) => state.transferMethod);
+export const useSetTransferMethod = () =>
+  useBridgeStore((state) => state.setTransferMethod);
 
 export const useUserAddress = () =>
   useBridgeStore((state) => state.userAddress);

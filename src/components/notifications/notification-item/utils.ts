@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  Info,
-  Loader2,
-} from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Info, Loader2 } from "lucide-react";
 import { createElement } from "react";
 import type { Notification } from "~/lib/notifications";
 
@@ -25,7 +19,9 @@ export function formatTimestamp(timestamp: number): string {
 export function getStatusIcon(status: Notification["status"]): ReactNode {
   switch (status) {
     case "success":
-      return createElement(CheckCircle2, { className: "size-5 text-green-500" });
+      return createElement(CheckCircle2, {
+        className: "size-5 text-green-500",
+      });
     case "failed":
       return createElement(AlertCircle, { className: "size-5 text-red-500" });
     case "in_progress":

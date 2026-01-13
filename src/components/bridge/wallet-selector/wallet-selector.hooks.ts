@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import type { WalletOption, WalletSelectorProps } from "./wallet-selector.types";
+import type {
+  WalletOption,
+  WalletSelectorProps,
+} from "./wallet-selector.types";
 
 export function useWalletSelectorState({
   wallets,
@@ -40,13 +43,15 @@ export function useWalletSelectorState({
             connectorKey.includes("coinbase") ||
             connectorKey.includes("walletconnect") ||
             connectorKey.includes("rainbow") ||
-            (connectorKey.includes("phantom") && connectorKey.includes("evm")) ||
+            (connectorKey.includes("phantom") &&
+              connectorKey.includes("evm")) ||
             (!connectorKey.includes("solana") && !connectorKey.includes("sui"))
           );
 
         case "solana":
           return (
-            (connectorKey.includes("phantom") && !connectorKey.includes("evm")) ||
+            (connectorKey.includes("phantom") &&
+              !connectorKey.includes("evm")) ||
             connectorKey.includes("solana") ||
             connectorKey.includes("solflare") ||
             connectorKey.includes("backpack")

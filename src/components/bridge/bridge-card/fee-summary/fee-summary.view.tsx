@@ -12,6 +12,7 @@ export function FeeSummaryView({
   fromChain,
   toChain,
   amount,
+  transferMethod,
   currentPosition,
   initialPosition,
   isMinimized,
@@ -53,7 +54,7 @@ export function FeeSummaryView({
         damping: 30,
         stiffness: 300,
       }}
-      className={cn("fixed left-0 top-0 hidden lg:block", zIndex)}
+      className={cn("fixed top-0 left-0 hidden lg:block", zIndex)}
       style={{
         touchAction: "none",
       }}
@@ -141,6 +142,7 @@ export function FeeSummaryView({
             fromChain={fromChain}
             toChain={toChain}
             amount={amount}
+            transferMethod={transferMethod}
           />
         </motion.div>
       </div>

@@ -18,14 +18,16 @@ export function NetworkToggle() {
       onClick={() => setEnvironment(isMainnet ? "testnet" : "mainnet")}
       className={cn(
         "relative flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-all",
-        "hover:bg-muted/50"
+        "hover:bg-muted/50",
       )}
       aria-label={`Switch to ${isMainnet ? "testnet" : "mainnet"}`}
     >
       <Circle
         className={cn(
           "size-2.5 transition-colors",
-          isMainnet ? "fill-blue-500 text-blue-500" : "fill-amber-500 text-amber-500"
+          isMainnet
+            ? "fill-blue-500 text-blue-500"
+            : "fill-amber-500 text-amber-500",
         )}
       />
       <span className="text-foreground">
@@ -34,5 +36,3 @@ export function NetworkToggle() {
     </motion.button>
   );
 }
-
-

@@ -384,11 +384,13 @@ export function BridgeProgressWindow({
                             <p className="text-foreground text-sm font-medium">
                               {step.name}
                             </p>
-                            {step.id === "attestation" && step.status === "in_progress" && (
-                              <p className="text-muted-foreground mt-1 text-xs">
-                                Waiting for Circle&apos;s attestation service (may take a few minutes)
-                              </p>
-                            )}
+                            {step.id === "attestation" &&
+                              step.status === "in_progress" && (
+                                <p className="text-muted-foreground mt-1 text-xs">
+                                  Waiting for Circle&apos;s attestation service
+                                  (may take a few minutes)
+                                </p>
+                              )}
                           </div>
                           {step.status === "failed" && onRetryStep && (
                             <Button
@@ -444,7 +446,9 @@ export function BridgeProgressWindow({
                             </button>
                             <a
                               href={getExplorerTxUrl(
-                                step.id === "mint" ? transaction.toChain : transaction.fromChain,
+                                step.id === "mint"
+                                  ? transaction.toChain
+                                  : transaction.fromChain,
                                 step.txHash,
                               )}
                               target="_blank"
@@ -467,7 +471,10 @@ export function BridgeProgressWindow({
             <div className="border-border/50 flex items-center justify-between border-t pt-4">
               {transaction.sourceTxHash && (
                 <a
-                  href={getExplorerTxUrl(transaction.fromChain, transaction.sourceTxHash)}
+                  href={getExplorerTxUrl(
+                    transaction.fromChain,
+                    transaction.sourceTxHash,
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground flex items-center gap-2 text-xs transition-colors"

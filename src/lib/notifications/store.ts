@@ -11,8 +11,13 @@ interface NotificationState {
   isOpen: boolean; // Notification panel open state
 
   // Actions
-  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => string; // Returns notification ID
-  updateNotification: (id: string, updates: Partial<Omit<Notification, "id" | "timestamp">>) => void;
+  addNotification: (
+    notification: Omit<Notification, "id" | "timestamp" | "read">,
+  ) => string; // Returns notification ID
+  updateNotification: (
+    id: string,
+    updates: Partial<Omit<Notification, "id" | "timestamp">>,
+  ) => void;
   removeNotification: (id: string) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -59,7 +64,7 @@ export const useNotificationStore = create<NotificationState>()(
       updateNotification: (id, updates) => {
         set((state) => ({
           notifications: state.notifications.map((n) =>
-            n.id === id ? { ...n, ...updates } : n
+            n.id === id ? { ...n, ...updates } : n,
           ),
         }));
       },
@@ -73,7 +78,7 @@ export const useNotificationStore = create<NotificationState>()(
       markAsRead: (id) => {
         set((state) => ({
           notifications: state.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
+            n.id === id ? { ...n, read: true } : n,
           ),
         }));
       },
@@ -119,8 +124,8 @@ export const useNotificationStore = create<NotificationState>()(
         notifications: state.notifications,
         // Don't persist isOpen state
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Selector hooks for better performance

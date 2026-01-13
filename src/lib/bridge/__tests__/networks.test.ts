@@ -10,7 +10,14 @@ import type { SupportedChainId } from "../networks";
 describe("Network Configuration", () => {
   describe("NETWORK_CONFIGS", () => {
     it("should contain all expected mainnet networks", () => {
-      const mainnetIds: SupportedChainId[] = ["Ethereum", "Base", "Arbitrum", "Solana"];
+      const mainnetIds: SupportedChainId[] = [
+        "Ethereum",
+        "Base",
+        "Arbitrum",
+        "Solana",
+        "Monad",
+        "HyperEVM",
+      ];
       mainnetIds.forEach((id) => {
         expect(NETWORK_CONFIGS[id]).toBeDefined();
         expect(NETWORK_CONFIGS[id].environment).toBe("mainnet");
@@ -23,6 +30,8 @@ describe("Network Configuration", () => {
         "Base_Sepolia",
         "Arbitrum_Sepolia",
         "Solana_Devnet",
+        "Monad_Testnet",
+        "HyperEVM_Testnet",
       ];
       testnetIds.forEach((id) => {
         expect(NETWORK_CONFIGS[id]).toBeDefined();
@@ -68,7 +77,7 @@ describe("Network Configuration", () => {
     it("should return only mainnet networks for mainnet environment", () => {
       const mainnetNetworks = getNetworksByEnvironment("mainnet");
 
-      expect(mainnetNetworks.length).toBe(4);
+      expect(mainnetNetworks.length).toBe(6);
       mainnetNetworks.forEach((network) => {
         expect(network.environment).toBe("mainnet");
       });
@@ -78,12 +87,14 @@ describe("Network Configuration", () => {
       expect(mainnetIds).toContain("Base");
       expect(mainnetIds).toContain("Arbitrum");
       expect(mainnetIds).toContain("Solana");
+      expect(mainnetIds).toContain("Monad");
+      expect(mainnetIds).toContain("HyperEVM");
     });
 
     it("should return only testnet networks for testnet environment", () => {
       const testnetNetworks = getNetworksByEnvironment("testnet");
 
-      expect(testnetNetworks.length).toBe(4);
+      expect(testnetNetworks.length).toBe(6);
       testnetNetworks.forEach((network) => {
         expect(network.environment).toBe("testnet");
       });
@@ -93,6 +104,8 @@ describe("Network Configuration", () => {
       expect(testnetIds).toContain("Base_Sepolia");
       expect(testnetIds).toContain("Arbitrum_Sepolia");
       expect(testnetIds).toContain("Solana_Devnet");
+      expect(testnetIds).toContain("Monad_Testnet");
+      expect(testnetIds).toContain("HyperEVM_Testnet");
     });
   });
 
@@ -122,12 +135,16 @@ describe("Network Configuration", () => {
       });
 
       it("should support testnet EVM to Solana routes", () => {
-        expect(isRouteSupported("Ethereum_Sepolia", "Solana_Devnet")).toBe(true);
+        expect(isRouteSupported("Ethereum_Sepolia", "Solana_Devnet")).toBe(
+          true,
+        );
         expect(isRouteSupported("Base_Sepolia", "Solana_Devnet")).toBe(true);
       });
 
       it("should support testnet Solana to EVM routes", () => {
-        expect(isRouteSupported("Solana_Devnet", "Ethereum_Sepolia")).toBe(true);
+        expect(isRouteSupported("Solana_Devnet", "Ethereum_Sepolia")).toBe(
+          true,
+        );
         expect(isRouteSupported("Solana_Devnet", "Base_Sepolia")).toBe(true);
       });
     });
@@ -136,7 +153,9 @@ describe("Network Configuration", () => {
       it("should not support same chain routes", () => {
         expect(isRouteSupported("Ethereum", "Ethereum")).toBe(false);
         expect(isRouteSupported("Solana", "Solana")).toBe(false);
-        expect(isRouteSupported("Ethereum_Sepolia", "Ethereum_Sepolia")).toBe(false);
+        expect(isRouteSupported("Ethereum_Sepolia", "Ethereum_Sepolia")).toBe(
+          false,
+        );
       });
 
       it("should not support cross-environment routes (mainnet to testnet)", () => {
@@ -152,8 +171,12 @@ describe("Network Configuration", () => {
       });
 
       it("should return false for invalid chain IDs", () => {
-        expect(isRouteSupported("InvalidChain" as SupportedChainId, "Ethereum")).toBe(false);
-        expect(isRouteSupported("Ethereum", "InvalidChain" as SupportedChainId)).toBe(false);
+        expect(
+          isRouteSupported("InvalidChain" as SupportedChainId, "Ethereum"),
+        ).toBe(false);
+        expect(
+          isRouteSupported("Ethereum", "InvalidChain" as SupportedChainId),
+        ).toBe(false);
       });
     });
   });
@@ -163,13 +186,13 @@ describe("Network Configuration", () => {
       const txHash = "0x1234567890abcdef";
 
       expect(getExplorerTxUrl("Ethereum", txHash)).toBe(
-        `https://etherscan.io/tx/${txHash}`
+        `https://etherscan.io/tx/${txHash}`,
       );
       expect(getExplorerTxUrl("Base", txHash)).toBe(
-        `https://basescan.org/tx/${txHash}`
+        `https://basescan.org/tx/${txHash}`,
       );
       expect(getExplorerTxUrl("Arbitrum", txHash)).toBe(
-        `https://arbiscan.io/tx/${txHash}`
+        `https://arbiscan.io/tx/${txHash}`,
       );
     });
 
@@ -177,13 +200,13 @@ describe("Network Configuration", () => {
       const txHash = "0xabcdef1234567890";
 
       expect(getExplorerTxUrl("Ethereum_Sepolia", txHash)).toBe(
-        `https://sepolia.etherscan.io/tx/${txHash}`
+        `https://sepolia.etherscan.io/tx/${txHash}`,
       );
       expect(getExplorerTxUrl("Base_Sepolia", txHash)).toBe(
-        `https://sepolia.basescan.org/tx/${txHash}`
+        `https://sepolia.basescan.org/tx/${txHash}`,
       );
       expect(getExplorerTxUrl("Arbitrum_Sepolia", txHash)).toBe(
-        `https://sepolia.arbiscan.io/tx/${txHash}`
+        `https://sepolia.arbiscan.io/tx/${txHash}`,
       );
     });
 
@@ -191,7 +214,7 @@ describe("Network Configuration", () => {
       const txHash = "5xYz...abc";
 
       expect(getExplorerTxUrl("Solana", txHash)).toBe(
-        `https://solscan.io/tx/${txHash}`
+        `https://solscan.io/tx/${txHash}`,
       );
     });
 
@@ -199,12 +222,14 @@ describe("Network Configuration", () => {
       const txHash = "3abc...xyz";
 
       expect(getExplorerTxUrl("Solana_Devnet", txHash)).toBe(
-        `https://solscan.io/tx/${txHash}?cluster=devnet`
+        `https://solscan.io/tx/${txHash}?cluster=devnet`,
       );
     });
 
     it("should return empty string for invalid chain ID", () => {
-      expect(getExplorerTxUrl("InvalidChain" as SupportedChainId, "0x123")).toBe("");
+      expect(
+        getExplorerTxUrl("InvalidChain" as SupportedChainId, "0x123"),
+      ).toBe("");
     });
   });
 });

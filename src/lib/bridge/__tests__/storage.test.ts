@@ -4,7 +4,7 @@ import type { BridgeTransaction } from "../types";
 
 // Helper to create a mock transaction
 function createMockTransaction(
-  overrides: Partial<BridgeTransaction> = {}
+  overrides: Partial<BridgeTransaction> = {},
 ): BridgeTransaction {
   return {
     id: `tx-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -15,9 +15,19 @@ function createMockTransaction(
     token: "USDC",
     status: "pending",
     steps: [
-      { id: "approve", name: "Approve", status: "pending", timestamp: Date.now() },
+      {
+        id: "approve",
+        name: "Approve",
+        status: "pending",
+        timestamp: Date.now(),
+      },
       { id: "burn", name: "Burn", status: "pending", timestamp: Date.now() },
-      { id: "attestation", name: "Attestation", status: "pending", timestamp: Date.now() },
+      {
+        id: "attestation",
+        name: "Attestation",
+        status: "pending",
+        timestamp: Date.now(),
+      },
       { id: "mint", name: "Mint", status: "pending", timestamp: Date.now() },
     ],
     createdAt: Date.now(),
@@ -94,7 +104,8 @@ describe("BridgeStorage", () => {
       await BridgeStorage.saveTransaction(tx1);
       await BridgeStorage.saveTransaction(tx2);
 
-      const transactions = await BridgeStorage.getTransactionsByUser(userAddress);
+      const transactions =
+        await BridgeStorage.getTransactionsByUser(userAddress);
       expect(transactions.length).toBe(2);
     });
 
@@ -103,10 +114,10 @@ describe("BridgeStorage", () => {
       const user2 = "0x2222222222222222222222222222222222222222";
 
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress: user1, id: "user1-tx" })
+        createMockTransaction({ userAddress: user1, id: "user1-tx" }),
       );
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress: user2, id: "user2-tx" })
+        createMockTransaction({ userAddress: user2, id: "user2-tx" }),
       );
 
       const user1Txs = await BridgeStorage.getTransactionsByUser(user1);
@@ -120,31 +131,39 @@ describe("BridgeStorage", () => {
 
     it("should preserve Solana address case (Base58 is case-sensitive)", async () => {
       const solanaAddress = "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK";
-      const tx = createMockTransaction({ userAddress: solanaAddress, id: "solana-tx" });
+      const tx = createMockTransaction({
+        userAddress: solanaAddress,
+        id: "solana-tx",
+      });
 
       await BridgeStorage.saveTransaction(tx);
 
       // Query with exact case should work
-      const transactions = await BridgeStorage.getTransactionsByUser(solanaAddress);
+      const transactions =
+        await BridgeStorage.getTransactionsByUser(solanaAddress);
       expect(transactions.length).toBe(1);
       expect(transactions[0]!.userAddress).toBe(solanaAddress);
 
       // Query with lowercase should NOT find the transaction
       // (This is the fix we implemented - addresses are no longer lowercased)
       const lowercaseTxs = await BridgeStorage.getTransactionsByUser(
-        solanaAddress.toLowerCase()
+        solanaAddress.toLowerCase(),
       );
       expect(lowercaseTxs.length).toBe(0);
     });
 
     it("should work with EVM addresses in any case since they're stored as-is", async () => {
       const checksumAddress = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
-      const tx = createMockTransaction({ userAddress: checksumAddress, id: "evm-tx" });
+      const tx = createMockTransaction({
+        userAddress: checksumAddress,
+        id: "evm-tx",
+      });
 
       await BridgeStorage.saveTransaction(tx);
 
       // Query with exact case should work
-      const transactions = await BridgeStorage.getTransactionsByUser(checksumAddress);
+      const transactions =
+        await BridgeStorage.getTransactionsByUser(checksumAddress);
       expect(transactions.length).toBe(1);
 
       // Clean up
@@ -157,25 +176,37 @@ describe("BridgeStorage", () => {
       const userAddress = "0x1234567890123456789012345678901234567890";
 
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress, id: "pending-tx", status: "pending" })
+        createMockTransaction({
+          userAddress,
+          id: "pending-tx",
+          status: "pending",
+        }),
       );
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress, id: "completed-tx", status: "completed" })
+        createMockTransaction({
+          userAddress,
+          id: "completed-tx",
+          status: "completed",
+        }),
       );
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress, id: "failed-tx", status: "failed" })
+        createMockTransaction({
+          userAddress,
+          id: "failed-tx",
+          status: "failed",
+        }),
       );
 
       const pendingTxs = await BridgeStorage.getTransactionsByUserAndStatus(
         userAddress,
-        "pending"
+        "pending",
       );
       expect(pendingTxs.length).toBe(1);
       expect(pendingTxs[0]!.status).toBe("pending");
 
       const completedTxs = await BridgeStorage.getTransactionsByUserAndStatus(
         userAddress,
-        "completed"
+        "completed",
       );
       expect(completedTxs.length).toBe(1);
       expect(completedTxs[0]!.status).toBe("completed");
@@ -191,24 +222,25 @@ describe("BridgeStorage", () => {
           userAddress,
           id: "old-tx",
           createdAt: Date.now() - 10000,
-        })
+        }),
       );
       await BridgeStorage.saveTransaction(
         createMockTransaction({
           userAddress,
           id: "new-tx",
           createdAt: Date.now(),
-        })
+        }),
       );
       await BridgeStorage.saveTransaction(
         createMockTransaction({
           userAddress,
           id: "middle-tx",
           createdAt: Date.now() - 5000,
-        })
+        }),
       );
 
-      const transactions = await BridgeStorage.getRecentTransactions(userAddress);
+      const transactions =
+        await BridgeStorage.getRecentTransactions(userAddress);
 
       expect(transactions[0]!.id).toBe("new-tx");
       expect(transactions[2]!.id).toBe("old-tx");
@@ -224,7 +256,7 @@ describe("BridgeStorage", () => {
             userAddress,
             id: `tx-${i}`,
             createdAt: Date.now() - i * 1000,
-          })
+          }),
         );
       }
 
@@ -249,7 +281,11 @@ describe("BridgeStorage", () => {
       const tx = createMockTransaction({ status: "pending" });
       await BridgeStorage.saveTransaction(tx);
 
-      await BridgeStorage.updateTransactionStatus(tx.id, "failed", "Transaction failed");
+      await BridgeStorage.updateTransactionStatus(
+        tx.id,
+        "failed",
+        "Transaction failed",
+      );
 
       const updated = await BridgeStorage.getTransaction(tx.id);
       expect(updated?.status).toBe("failed");
@@ -318,15 +354,16 @@ describe("BridgeStorage", () => {
       const userAddress = "0x1234567890123456789012345678901234567890";
 
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress, id: "tx-1" })
+        createMockTransaction({ userAddress, id: "tx-1" }),
       );
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress, id: "tx-2" })
+        createMockTransaction({ userAddress, id: "tx-2" }),
       );
 
       await BridgeStorage.clearUserTransactions(userAddress);
 
-      const transactions = await BridgeStorage.getTransactionsByUser(userAddress);
+      const transactions =
+        await BridgeStorage.getTransactionsByUser(userAddress);
       expect(transactions.length).toBe(0);
     });
 
@@ -335,10 +372,10 @@ describe("BridgeStorage", () => {
       const user2 = "0x2222222222222222222222222222222222222222";
 
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress: user1, id: "user1-tx" })
+        createMockTransaction({ userAddress: user1, id: "user1-tx" }),
       );
       await BridgeStorage.saveTransaction(
-        createMockTransaction({ userAddress: user2, id: "user2-tx" })
+        createMockTransaction({ userAddress: user2, id: "user2-tx" }),
       );
 
       await BridgeStorage.clearUserTransactions(user1);
@@ -364,10 +401,30 @@ describe("BridgeStorage", () => {
         id: "retryable-tx",
         status: "failed",
         steps: [
-          { id: "approve", name: "Approve", status: "completed", timestamp: Date.now() },
-          { id: "burn", name: "Burn", status: "completed", timestamp: Date.now() },
-          { id: "attestation", name: "Attestation", status: "failed", timestamp: Date.now() },
-          { id: "mint", name: "Mint", status: "pending", timestamp: Date.now() },
+          {
+            id: "approve",
+            name: "Approve",
+            status: "completed",
+            timestamp: Date.now(),
+          },
+          {
+            id: "burn",
+            name: "Burn",
+            status: "completed",
+            timestamp: Date.now(),
+          },
+          {
+            id: "attestation",
+            name: "Attestation",
+            status: "failed",
+            timestamp: Date.now(),
+          },
+          {
+            id: "mint",
+            name: "Mint",
+            status: "pending",
+            timestamp: Date.now(),
+          },
         ],
       });
 
@@ -377,17 +434,38 @@ describe("BridgeStorage", () => {
         id: "not-retryable-tx",
         status: "failed",
         steps: [
-          { id: "approve", name: "Approve", status: "failed", timestamp: Date.now() },
-          { id: "burn", name: "Burn", status: "pending", timestamp: Date.now() },
-          { id: "attestation", name: "Attestation", status: "pending", timestamp: Date.now() },
-          { id: "mint", name: "Mint", status: "pending", timestamp: Date.now() },
+          {
+            id: "approve",
+            name: "Approve",
+            status: "failed",
+            timestamp: Date.now(),
+          },
+          {
+            id: "burn",
+            name: "Burn",
+            status: "pending",
+            timestamp: Date.now(),
+          },
+          {
+            id: "attestation",
+            name: "Attestation",
+            status: "pending",
+            timestamp: Date.now(),
+          },
+          {
+            id: "mint",
+            name: "Mint",
+            status: "pending",
+            timestamp: Date.now(),
+          },
         ],
       });
 
       await BridgeStorage.saveTransaction(retryableTx);
       await BridgeStorage.saveTransaction(notRetryableTx);
 
-      const retryable = await BridgeStorage.getRetryableTransactions(userAddress);
+      const retryable =
+        await BridgeStorage.getRetryableTransactions(userAddress);
 
       expect(retryable.length).toBe(1);
       expect(retryable[0]!.id).toBe("retryable-tx");
@@ -401,10 +479,11 @@ describe("BridgeStorage", () => {
           userAddress,
           id: "completed-tx",
           status: "completed",
-        })
+        }),
       );
 
-      const retryable = await BridgeStorage.getRetryableTransactions(userAddress);
+      const retryable =
+        await BridgeStorage.getRetryableTransactions(userAddress);
       expect(retryable.length).toBe(0);
     });
   });

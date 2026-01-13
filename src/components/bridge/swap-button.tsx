@@ -41,5 +41,3 @@ export function SwapButton({ onSwap }: SwapButtonProps) {
     </div>
   );
 }
-
-

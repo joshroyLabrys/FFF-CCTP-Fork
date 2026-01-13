@@ -6,10 +6,17 @@ import { AmountInput } from "../amount-input";
 import { SwapButton } from "../swap-button";
 import { DestinationAddressInput } from "../destination-address-input";
 import { WalletSelector } from "../wallet-selector";
+import { TransferMethodToggle } from "../transfer-method-toggle";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Skeleton } from "~/components/ui/skeleton";
-import { ArrowRight, Loader2, AlertCircle, ChevronRight } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+  AlertTriangle,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
 import { NETWORK_CONFIGS } from "~/lib/bridge/networks";
 import { DraggableFeeSummary } from "./fee-summary";
@@ -17,6 +24,8 @@ import type { BridgeCardViewProps } from "./bridge-card.types";
 
 export function BridgeCardView({
   isInitialized,
+  transferMethod,
+  onTransferMethodChange,
   fromChain,
   toChain,
   onFromChainChange,
@@ -50,6 +59,8 @@ export function BridgeCardView({
   isBridging,
   canBridge,
   needsDestinationWallet,
+  needsWalletForMinting,
+  destNetworkName,
   onBridge,
   onPromptDestWallet,
   bridgeCardRef,
@@ -77,6 +88,14 @@ export function BridgeCardView({
               <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
                 Transfer USDC across chains instantly with Circle CCTP
               </p>
+            </div>
+
+            {/* Transfer Method Toggle */}
+            <div className="mb-4">
+              <TransferMethodToggle
+                value={transferMethod}
+                onChange={onTransferMethodChange}
+              />
             </div>
 
             {/* Network Switch Error */}
@@ -164,7 +183,7 @@ export function BridgeCardView({
                       />
                       <label
                         htmlFor="custom-address"
-                        className="text-muted-foreground hover:text-foreground cursor-pointer text-xs font-medium leading-none transition-colors"
+                        className="text-muted-foreground hover:text-foreground cursor-pointer text-xs leading-none font-medium transition-colors"
                       >
                         Use custom address
                       </label>
@@ -226,42 +245,75 @@ export function BridgeCardView({
                 </div>
               )}
 
+              {/* Warning: Need wallet for minting with custom address */}
+              <AnimatePresence>
+                {needsWalletForMinting && toChain && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    className="bg-muted/30 overflow-hidden rounded-xl p-1 backdrop-blur-xl"
+                  >
+                    <div className="bg-card/80 border-border/50 flex items-center gap-3 rounded-lg border p-3 shadow-sm">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                        <AlertTriangle className="size-4 text-amber-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-foreground text-sm font-medium">
+                          {destNetworkName} wallet required
+                        </p>
+                        <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
+                          Connect a wallet to pay gas fees on the destination
+                          chain. Your funds will be deposited to{" "}
+                          {customAddress.slice(0, 8)}...
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => onPromptDestWallet(destNetworkName)}
+                        size="sm"
+                        className="h-8 shrink-0 border-0 bg-amber-500/10 px-3 text-xs font-medium text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+                      >
+                        Connect
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Destination Wallet Warning */}
               {needsDestinationWallet && toChain && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="border-border/50 bg-muted/30 rounded-xl border p-3 backdrop-blur-xl"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  className="bg-muted/30 overflow-hidden rounded-xl p-1 backdrop-blur-xl"
                 >
-                  <div className="flex flex-col gap-3">
-                    <div className="text-muted-foreground flex items-start gap-2 text-sm">
-                      <AlertCircle className="mt-0.5 size-4 flex-shrink-0" />
-                      <div className="flex-1 space-y-1">
-                        <p className="text-foreground font-medium">
-                          Connect {NETWORK_CONFIGS[toChain]?.name} wallet
-                        </p>
-                        <p className="text-xs">
-                          You need a{" "}
-                          {NETWORK_CONFIGS[toChain]?.type === "evm"
-                            ? "EVM"
-                            : "Solana"}{" "}
-                          wallet to receive USDC, or enable &quot;Send to a
-                          different address&quot; option above.
-                        </p>
-                      </div>
+                  <div className="bg-card/80 border-border/50 flex items-center gap-3 rounded-lg border p-3 shadow-sm">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                      <AlertCircle className="size-4 text-blue-500" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground text-sm font-medium">
+                        Connect{" "}
+                        {NETWORK_CONFIGS[toChain]?.type === "evm"
+                          ? "EVM"
+                          : "Solana"}{" "}
+                        wallet
+                      </p>
+                      <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
+                        Required to receive USDC on{" "}
+                        {NETWORK_CONFIGS[toChain]?.name}
+                      </p>
                     </div>
                     <Button
                       onClick={() =>
                         onPromptDestWallet(NETWORK_CONFIGS[toChain]?.name)
                       }
-                      variant="outline"
-                      className="border-border/50 bg-card/50 hover:bg-card/80 w-full backdrop-blur-xl"
+                      size="sm"
+                      className="h-8 shrink-0 border-0 bg-blue-500/10 px-3 text-xs font-medium text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
                     >
-                      Connect{" "}
-                      {NETWORK_CONFIGS[toChain]?.type === "evm"
-                        ? "EVM"
-                        : "Solana"}{" "}
-                      Wallet
+                      Connect
                     </Button>
                   </div>
                 </motion.div>
@@ -288,10 +340,24 @@ export function BridgeCardView({
                     )}
                   </div>
                   <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-muted-foreground">Bridge fee</span>
-                    <span className="font-medium text-green-600 dark:text-green-500">
-                      FREE (0%)
+                    <span className="text-muted-foreground">
+                      {transferMethod === "fast" ? "CCTP fee" : "Bridge fee"}
                     </span>
+                    {transferMethod === "fast" &&
+                    estimate?.providerFees &&
+                    estimate.providerFees.length > 0 ? (
+                      <span className="font-medium text-amber-600 dark:text-amber-400">
+                        ~0.1% (
+                        {estimate.providerFees
+                          .reduce((sum, fee) => sum + parseFloat(fee.amount), 0)
+                          .toFixed(4)}{" "}
+                        USDC)
+                      </span>
+                    ) : (
+                      <span className="font-medium text-green-600 dark:text-green-500">
+                        FREE (0%)
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={onToggleFeeDetails}
@@ -352,6 +418,8 @@ export function BridgeCardView({
                   <span>Select Networks</span>
                 ) : needsDestinationWallet ? (
                   <span>Select Destination Wallet</span>
+                ) : needsWalletForMinting ? (
+                  <span>Connect {destNetworkName} Wallet</span>
                 ) : !isValidAmount ? (
                   <span>Enter Amount</span>
                 ) : (
@@ -384,6 +452,7 @@ export function BridgeCardView({
               fromChain={fromChain}
               toChain={toChain}
               amount={amount || "0.00"}
+              transferMethod={transferMethod}
               onClose={onToggleFeeDetails}
             />
           )}

@@ -12,7 +12,11 @@ import type {
   WalletConnectorCore,
 } from "@dynamic-labs/wallet-connector-core";
 import type { AdapterContext } from "@circle-fin/bridge-kit";
-import { type NetworkType, NETWORK_CONFIGS, type SupportedChainId } from "../networks";
+import {
+  type NetworkType,
+  NETWORK_CONFIGS,
+  type SupportedChainId,
+} from "../networks";
 import { DynamicSolanaWalletAdapter } from "~/lib/solana/provider";
 import { Connection } from "@solana/web3.js";
 
@@ -59,14 +63,18 @@ export class EVMAdapterCreator implements IAdapterCreator {
     targetChainId: number,
   ): Promise<void> {
     if (!isEthereumWallet(wallet)) {
-      console.warn("[EVMAdapter] Cannot switch network: wallet is not an EVM wallet");
+      console.warn(
+        "[EVMAdapter] Cannot switch network: wallet is not an EVM wallet",
+      );
       return;
     }
 
     try {
       console.log(`[EVMAdapter] Switching to chain ${targetChainId}...`);
       await wallet.switchNetwork(targetChainId);
-      console.log(`[EVMAdapter] Successfully switched to chain ${targetChainId}`);
+      console.log(
+        `[EVMAdapter] Successfully switched to chain ${targetChainId}`,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`[EVMAdapter] Failed to switch network:`, error);

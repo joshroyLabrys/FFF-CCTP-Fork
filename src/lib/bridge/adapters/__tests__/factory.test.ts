@@ -1,14 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AdapterFactory, EVMAdapterCreator, SolanaAdapterCreator } from "../factory";
+import {
+  AdapterFactory,
+  EVMAdapterCreator,
+  SolanaAdapterCreator,
+} from "../factory";
 import type { IAdapterCreator } from "../factory";
 
 // Mock the external dependencies
 vi.mock("@circle-fin/adapter-viem-v2", () => ({
-  createViemAdapterFromProvider: vi.fn().mockResolvedValue({ type: "evm-adapter" }),
+  createViemAdapterFromProvider: vi
+    .fn()
+    .mockResolvedValue({ type: "evm-adapter" }),
 }));
 
 vi.mock("@circle-fin/adapter-solana", () => ({
-  createSolanaAdapterFromProvider: vi.fn().mockResolvedValue({ type: "solana-adapter" }),
+  createSolanaAdapterFromProvider: vi
+    .fn()
+    .mockResolvedValue({ type: "solana-adapter" }),
 }));
 
 vi.mock("@dynamic-labs/ethereum", () => ({
@@ -53,7 +61,9 @@ const createMockSolanaWallet = (address: string) => ({
   type: "solana",
   address,
   connector: { key: "phantom" },
-  getConnection: vi.fn().mockResolvedValue({ rpcEndpoint: "https://api.devnet.solana.com" }),
+  getConnection: vi
+    .fn()
+    .mockResolvedValue({ rpcEndpoint: "https://api.devnet.solana.com" }),
 });
 
 describe("AdapterFactory", () => {
@@ -95,13 +105,15 @@ describe("AdapterFactory", () => {
       const newEVMCreator: IAdapterCreator = {
         networkType: "evm",
         canHandle: vi.fn().mockReturnValue(true),
-        createAdapter: vi.fn().mockResolvedValue({ type: "custom-evm-adapter" }),
+        createAdapter: vi
+          .fn()
+          .mockResolvedValue({ type: "custom-evm-adapter" }),
       };
 
       factory.registerCreator(newEVMCreator);
 
       expect(warnSpy).toHaveBeenCalledWith(
-        "Overwriting existing adapter creator for evm"
+        "Overwriting existing adapter creator for evm",
       );
       warnSpy.mockRestore();
     });
@@ -109,10 +121,18 @@ describe("AdapterFactory", () => {
 
   describe("getAdapter", () => {
     it("should create and cache EVM adapter", async () => {
-      const wallet = createMockEVMWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockEVMWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
 
-      const adapter1 = await factory.getAdapter(wallet as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
-      const adapter2 = await factory.getAdapter(wallet as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      const adapter1 = await factory.getAdapter(
+        wallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
+      const adapter2 = await factory.getAdapter(
+        wallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
 
       // Should return cached adapter
       expect(adapter1).toBe(adapter2);
@@ -121,35 +141,50 @@ describe("AdapterFactory", () => {
     });
 
     it("should create different adapters for different network types", async () => {
-      const evmWallet = createMockEVMWallet("0x1234567890123456789012345678901234567890");
-      const solanaWallet = createMockSolanaWallet("DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK");
+      const evmWallet = createMockEVMWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
+      const solanaWallet = createMockSolanaWallet(
+        "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+      );
 
-      const evmAdapter = await factory.getAdapter(evmWallet as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
-      const solanaAdapter = await factory.getAdapter(solanaWallet as unknown as Parameters<typeof factory.getAdapter>[0], "solana");
+      const evmAdapter = await factory.getAdapter(
+        evmWallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
+      const solanaAdapter = await factory.getAdapter(
+        solanaWallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "solana",
+      );
 
       expect(evmAdapter).not.toBe(solanaAdapter);
     });
 
     it("should cache adapters separately for different chainIds", async () => {
       // Import the mock to track calls
-      const { createSolanaAdapterFromProvider } = await import("@circle-fin/adapter-solana");
-      const mockCreate = createSolanaAdapterFromProvider as ReturnType<typeof vi.fn>;
+      const { createSolanaAdapterFromProvider } =
+        await import("@circle-fin/adapter-solana");
+      const mockCreate = createSolanaAdapterFromProvider as ReturnType<
+        typeof vi.fn
+      >;
       mockCreate.mockClear();
 
-      const solanaWallet = createMockSolanaWallet("DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK");
+      const solanaWallet = createMockSolanaWallet(
+        "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+      );
 
       // Get adapter for mainnet
       await factory.getAdapter(
         solanaWallet as unknown as Parameters<typeof factory.getAdapter>[0],
         "solana",
-        "Solana"
+        "Solana",
       );
 
       // Get adapter for devnet - should create a NEW adapter (different cache key)
       await factory.getAdapter(
         solanaWallet as unknown as Parameters<typeof factory.getAdapter>[0],
         "solana",
-        "Solana_Devnet"
+        "Solana_Devnet",
       );
 
       // Both should be created (2 calls total) - proving different cache keys
@@ -159,7 +194,7 @@ describe("AdapterFactory", () => {
       await factory.getAdapter(
         solanaWallet as unknown as Parameters<typeof factory.getAdapter>[0],
         "solana",
-        "Solana"
+        "Solana",
       );
       expect(mockCreate).toHaveBeenCalledTimes(2); // Still 2, not 3
     });
@@ -168,7 +203,10 @@ describe("AdapterFactory", () => {
       const wallet = createMockEVMWallet("0x123");
 
       await expect(
-        factory.getAdapter(wallet as unknown as Parameters<typeof factory.getAdapter>[0], "sui")
+        factory.getAdapter(
+          wallet as unknown as Parameters<typeof factory.getAdapter>[0],
+          "sui",
+        ),
       ).rejects.toThrow("No adapter creator registered for sui");
     });
 
@@ -177,40 +215,67 @@ describe("AdapterFactory", () => {
 
       // EVM wallet trying to create Solana adapter
       await expect(
-        factory.getAdapter(evmWallet as unknown as Parameters<typeof factory.getAdapter>[0], "solana")
+        factory.getAdapter(
+          evmWallet as unknown as Parameters<typeof factory.getAdapter>[0],
+          "solana",
+        ),
       ).rejects.toThrow(/is not compatible with solana/);
     });
   });
 
   describe("clearCache", () => {
     it("should clear all cached adapters", async () => {
-      const wallet = createMockEVMWallet("0x1234567890123456789012345678901234567890");
+      const wallet = createMockEVMWallet(
+        "0x1234567890123456789012345678901234567890",
+      );
 
-      await factory.getAdapter(wallet as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      await factory.getAdapter(
+        wallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
       factory.clearCache();
 
       // Getting adapter again should create a new one
-      await factory.getAdapter(wallet as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      await factory.getAdapter(
+        wallet as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
 
       expect(wallet.getWalletClient).toHaveBeenCalledTimes(2);
     });
 
     it("should clear cache for specific wallet address only", async () => {
-      const wallet1 = createMockEVMWallet("0x1111111111111111111111111111111111111111");
-      const wallet2 = createMockEVMWallet("0x2222222222222222222222222222222222222222");
+      const wallet1 = createMockEVMWallet(
+        "0x1111111111111111111111111111111111111111",
+      );
+      const wallet2 = createMockEVMWallet(
+        "0x2222222222222222222222222222222222222222",
+      );
 
-      await factory.getAdapter(wallet1 as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
-      await factory.getAdapter(wallet2 as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      await factory.getAdapter(
+        wallet1 as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
+      await factory.getAdapter(
+        wallet2 as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
 
       // Clear only wallet1's cache
       factory.clearCache("0x1111111111111111111111111111111111111111");
 
       // wallet1 should need new adapter
-      await factory.getAdapter(wallet1 as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      await factory.getAdapter(
+        wallet1 as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
       expect(wallet1.getWalletClient).toHaveBeenCalledTimes(2);
 
       // wallet2 should still use cached adapter
-      await factory.getAdapter(wallet2 as unknown as Parameters<typeof factory.getAdapter>[0], "evm");
+      await factory.getAdapter(
+        wallet2 as unknown as Parameters<typeof factory.getAdapter>[0],
+        "evm",
+      );
       expect(wallet2.getWalletClient).toHaveBeenCalledTimes(1);
     });
   });
@@ -251,12 +316,20 @@ describe("EVMAdapterCreator", () => {
   describe("canHandle", () => {
     it("should return true for EVM wallets", () => {
       const wallet = createMockEVMWallet("0x123");
-      expect(creator.canHandle(wallet as unknown as Parameters<typeof creator.canHandle>[0])).toBe(true);
+      expect(
+        creator.canHandle(
+          wallet as unknown as Parameters<typeof creator.canHandle>[0],
+        ),
+      ).toBe(true);
     });
 
     it("should return false for non-EVM wallets", () => {
       const wallet = createMockSolanaWallet("DYw8j...");
-      expect(creator.canHandle(wallet as unknown as Parameters<typeof creator.canHandle>[0])).toBe(false);
+      expect(
+        creator.canHandle(
+          wallet as unknown as Parameters<typeof creator.canHandle>[0],
+        ),
+      ).toBe(false);
     });
   });
 
@@ -265,7 +338,9 @@ describe("EVMAdapterCreator", () => {
       const wallet = createMockSolanaWallet("DYw8j...");
 
       await expect(
-        creator.createAdapter(wallet as unknown as Parameters<typeof creator.createAdapter>[0])
+        creator.createAdapter(
+          wallet as unknown as Parameters<typeof creator.createAdapter>[0],
+        ),
       ).rejects.toThrow("Wallet is not an Ethereum wallet");
     });
   });
@@ -282,12 +357,20 @@ describe("SolanaAdapterCreator", () => {
   describe("canHandle", () => {
     it("should return true for Solana wallets", () => {
       const wallet = createMockSolanaWallet("DYw8j...");
-      expect(creator.canHandle(wallet as unknown as Parameters<typeof creator.canHandle>[0])).toBe(true);
+      expect(
+        creator.canHandle(
+          wallet as unknown as Parameters<typeof creator.canHandle>[0],
+        ),
+      ).toBe(true);
     });
 
     it("should return false for non-Solana wallets", () => {
       const wallet = createMockEVMWallet("0x123");
-      expect(creator.canHandle(wallet as unknown as Parameters<typeof creator.canHandle>[0])).toBe(false);
+      expect(
+        creator.canHandle(
+          wallet as unknown as Parameters<typeof creator.canHandle>[0],
+        ),
+      ).toBe(false);
     });
   });
 
@@ -296,7 +379,9 @@ describe("SolanaAdapterCreator", () => {
       const wallet = createMockEVMWallet("0x123");
 
       await expect(
-        creator.createAdapter(wallet as unknown as Parameters<typeof creator.createAdapter>[0])
+        creator.createAdapter(
+          wallet as unknown as Parameters<typeof creator.createAdapter>[0],
+        ),
       ).rejects.toThrow("Wallet is not a Solana wallet");
     });
   });

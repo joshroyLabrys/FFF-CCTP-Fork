@@ -84,7 +84,7 @@ export function BridgeProgressModal({
           {canClose && (
             <button
               onClick={onClose}
-              className="absolute right-4 top-4 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
+              className="absolute top-4 right-4 z-10 rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white"
             >
               <X className="size-5" />
             </button>
@@ -121,13 +121,15 @@ export function BridgeProgressModal({
             <div className="mb-8">
               <div className="relative">
                 {/* Progress line */}
-                <div className="absolute left-0 right-0 top-6 h-1 bg-slate-200 dark:bg-slate-700">
+                <div className="absolute top-6 right-0 left-0 h-1 bg-slate-200 dark:bg-slate-700">
                   <motion.div
                     className="h-full bg-slate-900 dark:bg-slate-100"
                     initial={{ width: "0%" }}
                     animate={{
                       width: `${
-                        (transaction.steps.filter((s) => s.status === "completed").length /
+                        (transaction.steps.filter(
+                          (s) => s.status === "completed",
+                        ).length /
                           transaction.steps.length) *
                         100
                       }%`,
@@ -170,10 +172,14 @@ export function BridgeProgressModal({
                           <p
                             className={cn(
                               "text-xs font-medium transition-colors",
-                              step.status === "completed" && "text-green-600 dark:text-green-400",
-                              step.status === "in_progress" && "text-blue-600 dark:text-blue-400",
-                              step.status === "failed" && "text-red-600 dark:text-red-400",
-                              step.status === "pending" && "text-slate-500 dark:text-slate-400",
+                              step.status === "completed" &&
+                                "text-green-600 dark:text-green-400",
+                              step.status === "in_progress" &&
+                                "text-blue-600 dark:text-blue-400",
+                              step.status === "failed" &&
+                                "text-red-600 dark:text-red-400",
+                              step.status === "pending" &&
+                                "text-slate-500 dark:text-slate-400",
                             )}
                           >
                             {stepDisplayNames[step.name] ?? step.name}
@@ -249,17 +255,21 @@ export function BridgeProgressModal({
               </div>
 
               {/* Transaction link */}
-              {transaction.destinationTxHash && transaction.status === "completed" && (
-                <a
-                  href={getExplorerTxUrl(transaction.toChain, transaction.destinationTxHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  View on block explorer
-                  <ExternalLink className="size-4" />
-                </a>
-              )}
+              {transaction.destinationTxHash &&
+                transaction.status === "completed" && (
+                  <a
+                    href={getExplorerTxUrl(
+                      transaction.toChain,
+                      transaction.destinationTxHash,
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    View on block explorer
+                    <ExternalLink className="size-4" />
+                  </a>
+                )}
             </motion.div>
 
             {/* Action button */}

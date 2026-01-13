@@ -42,7 +42,7 @@ export function NotificationPanelView({
                 damping: 25,
                 stiffness: 300,
               }}
-              className="fixed right-4 top-14 w-full max-w-md"
+              className="fixed top-14 right-4 w-full max-w-md"
               style={{ zIndex: 200 }}
             >
               {/* Theme-aware glassmorphic container */}

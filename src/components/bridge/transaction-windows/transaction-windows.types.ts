@@ -1,5 +1,9 @@
 import type { DragControls } from "motion/react";
-import type { TransactionWindow, BridgeStep, BridgeTransaction } from "~/lib/bridge";
+import type {
+  TransactionWindow,
+  BridgeStep,
+  BridgeTransaction,
+} from "~/lib/bridge";
 
 export interface TransactionWindowProps {
   transactionWindow: TransactionWindow;

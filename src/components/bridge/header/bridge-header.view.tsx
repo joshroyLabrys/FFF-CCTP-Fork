@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  motion,
-  AnimatePresence,
-  LayoutGroup,
-} from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import {
   Wallet,
   ChevronDown,
@@ -124,7 +120,10 @@ export function BridgeHeaderView({
             <LayoutGroup>
               <div className="hidden lg:flex lg:items-center lg:gap-1">
                 {/* View menu */}
-                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                <motion.div
+                  layout
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -201,7 +200,10 @@ export function BridgeHeaderView({
                 </AnimatePresence>
 
                 {/* Resources menu */}
-                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                <motion.div
+                  layout
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -263,7 +265,10 @@ export function BridgeHeaderView({
                 </motion.div>
 
                 {/* Disclaimer button */}
-                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                <motion.div
+                  layout
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
                   <Button
                     variant="ghost"
                     onClick={onToggleDisclaimer}
@@ -277,7 +282,10 @@ export function BridgeHeaderView({
                 </motion.div>
 
                 {/* Arcade menu */}
-                <motion.div layout transition={{ duration: 0.2, ease: "easeInOut" }}>
+                <motion.div
+                  layout
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                >
                   <DropdownMenu modal={false}>
                     <DropdownMenuTrigger asChild>
                       <Button

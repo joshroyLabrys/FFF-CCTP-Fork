@@ -15,10 +15,7 @@ export function ScrollArea({
   autoHide = true,
 }: ScrollAreaProps) {
   return (
-    <SimpleBar
-      autoHide={autoHide}
-      className={cn("h-full", className)}
-    >
+    <SimpleBar autoHide={autoHide} className={cn("h-full", className)}>
       {children}
     </SimpleBar>
   );
@@ -30,10 +27,7 @@ interface RootScrollAreaProps {
 
 export function RootScrollArea({ children }: RootScrollAreaProps) {
   return (
-    <SimpleBar
-      autoHide
-      style={{ height: "100vh", width: "100%" }}
-    >
+    <SimpleBar autoHide style={{ height: "100vh", width: "100%" }}>
       {children}
     </SimpleBar>
   );

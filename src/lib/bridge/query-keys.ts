@@ -30,7 +30,4 @@ export const bridgeKeys = {
 export type BalanceQueryKey = ReturnType<typeof bridgeKeys.balance>;
 export type EstimateQueryKey = ReturnType<typeof bridgeKeys.estimate>;
 export type RouteQueryKey = ReturnType<typeof bridgeKeys.route>;
-export type BridgeQueryKey =
-  | BalanceQueryKey
-  | EstimateQueryKey
-  | RouteQueryKey;
+export type BridgeQueryKey = BalanceQueryKey | EstimateQueryKey | RouteQueryKey;

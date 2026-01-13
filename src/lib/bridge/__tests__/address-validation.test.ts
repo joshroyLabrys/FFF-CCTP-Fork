@@ -10,17 +10,23 @@ import {
 describe("Address Validation", () => {
   describe("isValidEVMAddress", () => {
     it("should return true for valid checksummed EVM addresses", () => {
-      expect(isValidEVMAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F")).toBe(true);
+      expect(
+        isValidEVMAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F"),
+      ).toBe(true);
     });
 
     it("should return true for valid lowercase EVM addresses", () => {
-      expect(isValidEVMAddress("0x71c7656ec7ab88b098defb751b7401b5f6d8976f")).toBe(true);
+      expect(
+        isValidEVMAddress("0x71c7656ec7ab88b098defb751b7401b5f6d8976f"),
+      ).toBe(true);
     });
 
     it("should return false for all-uppercase EVM addresses (invalid checksum)", () => {
       // All-uppercase is not a valid checksummed address in EIP-55
       // viem's isAddress() correctly rejects these
-      expect(isValidEVMAddress("0x71C7656EC7AB88B098DEFB751B7401B5F6D8976F")).toBe(false);
+      expect(
+        isValidEVMAddress("0x71C7656EC7AB88B098DEFB751B7401B5F6D8976F"),
+      ).toBe(false);
     });
 
     it("should return false for invalid EVM addresses", () => {
@@ -31,21 +37,29 @@ describe("Address Validation", () => {
     });
 
     it("should return false for addresses without 0x prefix", () => {
-      expect(isValidEVMAddress("71C7656EC7ab88b098defB751B7401B5f6d8976F")).toBe(false);
+      expect(
+        isValidEVMAddress("71C7656EC7ab88b098defB751B7401B5f6d8976F"),
+      ).toBe(false);
     });
   });
 
   describe("isValidSolanaAddress", () => {
     it("should return true for valid Solana addresses", () => {
       // Valid Solana mainnet addresses (Base58 encoded, case-sensitive)
-      expect(isValidSolanaAddress("DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK")).toBe(true);
-      expect(isValidSolanaAddress("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")).toBe(true);
+      expect(
+        isValidSolanaAddress("DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK"),
+      ).toBe(true);
+      expect(
+        isValidSolanaAddress("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+      ).toBe(true);
     });
 
     it("should return false for invalid Solana addresses", () => {
       expect(isValidSolanaAddress("invalid")).toBe(false);
       expect(isValidSolanaAddress("")).toBe(false);
-      expect(isValidSolanaAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F")).toBe(false);
+      expect(
+        isValidSolanaAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F"),
+      ).toBe(false);
     });
 
     it("should be case-sensitive for Solana addresses (Base58)", () => {
@@ -60,10 +74,18 @@ describe("Address Validation", () => {
 
     it("should reject addresses with invalid Base58 characters", () => {
       // Base58 doesn't include 0, O, I, l
-      expect(isValidSolanaAddress("0YW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK")).toBe(false);
-      expect(isValidSolanaAddress("OYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK")).toBe(false);
-      expect(isValidSolanaAddress("IYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK")).toBe(false);
-      expect(isValidSolanaAddress("lYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK")).toBe(false);
+      expect(
+        isValidSolanaAddress("0YW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK"),
+      ).toBe(false);
+      expect(
+        isValidSolanaAddress("OYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK"),
+      ).toBe(false);
+      expect(
+        isValidSolanaAddress("IYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK"),
+      ).toBe(false);
+      expect(
+        isValidSolanaAddress("lYW8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK"),
+      ).toBe(false);
     });
   });
 
@@ -73,7 +95,9 @@ describe("Address Validation", () => {
       const validSuiAddress = "0x" + "a".repeat(64);
       expect(isValidSuiAddress(validSuiAddress)).toBe(true);
 
-      const mixedCaseAddress = "0x" + "aAbBcCdDeEfF001122334455667788990011223344556677889900aabbccddee";
+      const mixedCaseAddress =
+        "0x" +
+        "aAbBcCdDeEfF001122334455667788990011223344556677889900aabbccddee";
       expect(isValidSuiAddress(mixedCaseAddress)).toBe(true);
     });
 
@@ -86,7 +110,9 @@ describe("Address Validation", () => {
       // Too long
       expect(isValidSuiAddress("0x" + "a".repeat(65))).toBe(false);
       // EVM address (40 hex chars, not 64)
-      expect(isValidSuiAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F")).toBe(false);
+      expect(
+        isValidSuiAddress("0x71C7656EC7ab88b098defB751B7401B5f6d8976F"),
+      ).toBe(false);
     });
 
     it("should require 0x prefix", () => {
@@ -99,7 +125,7 @@ describe("Address Validation", () => {
       it("should return valid for correct EVM addresses", () => {
         const result = validateAddressForNetwork(
           "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
-          "evm"
+          "evm",
         );
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -116,7 +142,7 @@ describe("Address Validation", () => {
       it("should return valid for correct Solana addresses", () => {
         const result = validateAddressForNetwork(
           "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
-          "solana"
+          "solana",
         );
         expect(result.valid).toBe(true);
         expect(result.error).toBeUndefined();
@@ -130,7 +156,10 @@ describe("Address Validation", () => {
 
       it("should reject lowercased Solana addresses", () => {
         const validAddress = "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK";
-        const result = validateAddressForNetwork(validAddress.toLowerCase(), "solana");
+        const result = validateAddressForNetwork(
+          validAddress.toLowerCase(),
+          "solana",
+        );
         expect(result.valid).toBe(false);
         expect(result.error).toContain("Invalid Solana address");
       });
@@ -171,7 +200,9 @@ describe("Address Validation", () => {
     });
 
     it("should return correct description for Solana", () => {
-      expect(getAddressFormatDescription("solana")).toBe("Solana address (base58)");
+      expect(getAddressFormatDescription("solana")).toBe(
+        "Solana address (base58)",
+      );
     });
 
     it("should return correct description for SUI", () => {

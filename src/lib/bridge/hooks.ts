@@ -92,7 +92,8 @@ export function useBridgeInit() {
         // Mark as auto-loaded to prevent running again
         hasAutoLoadedRef.current = true;
 
-        const setCurrentTransaction = useBridgeStore.getState().setCurrentTransaction;
+        const setCurrentTransaction =
+          useBridgeStore.getState().setCurrentTransaction;
         const setActiveWindow = useBridgeStore.getState().setActiveWindow;
 
         // Set as current transaction and show progress window
@@ -376,9 +377,7 @@ export function useNetworkAutoSwitch() {
         // Switch network using Dynamic's API
         // SolanaWallet has switchNetwork method that takes chainId as string/number
         if (typeof solanaWallet.switchNetwork === "function") {
-          await solanaWallet.switchNetwork(
-            network.dynamicChainId || fromChain,
-          );
+          await solanaWallet.switchNetwork(network.dynamicChainId || fromChain);
           console.log("[Network Switch] Successfully switched to:", fromChain);
 
           // Small delay to let network switch propagate
@@ -415,9 +414,9 @@ export function useWalletForNetwork(
   const { setSelectedTabIndex } = useDynamicContext();
   const { setShowLinkNewWalletModal } = useDynamicModals();
   const walletsByType = useWalletsByType();
-  const [compatibleWallet, setCompatibleWallet] = useState<ReturnType<
-    typeof useUserWallets
-  >[number] | null>(null);
+  const [compatibleWallet, setCompatibleWallet] = useState<
+    ReturnType<typeof useUserWallets>[number] | null
+  >(null);
 
   useEffect(() => {
     if (!networkType) {
@@ -503,7 +502,9 @@ export function useWalletSelection(
   hasCompatibleSourceWallet: boolean;
   hasCompatibleDestWallet: boolean;
   // Full wallet objects for bridge service
-  selectedSourceWalletFull: ReturnType<typeof useUserWallets>[number] | undefined;
+  selectedSourceWalletFull:
+    | ReturnType<typeof useUserWallets>[number]
+    | undefined;
   selectedDestWalletFull: ReturnType<typeof useUserWallets>[number] | undefined;
 } {
   const walletsByType = useWalletsByType();

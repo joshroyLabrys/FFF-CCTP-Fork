@@ -17,6 +17,7 @@ export function DraggableFeeSummary(props: FeeSummaryProps) {
       fromChain={props.fromChain}
       toChain={props.toChain}
       amount={props.amount}
+      transferMethod={props.transferMethod}
     />
   );
 }

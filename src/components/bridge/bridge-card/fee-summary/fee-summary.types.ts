@@ -1,5 +1,5 @@
 import type { DragControls } from "motion/react";
-import type { BridgeEstimate } from "~/lib/bridge/types";
+import type { BridgeEstimate, TransferMethod } from "~/lib/bridge/types";
 import type { SupportedChainId } from "~/lib/bridge/networks";
 
 export interface FeeSummaryProps {
@@ -8,6 +8,7 @@ export interface FeeSummaryProps {
   fromChain: SupportedChainId;
   toChain: SupportedChainId;
   amount: string;
+  transferMethod: TransferMethod;
   onClose: () => void;
 }
 
@@ -18,6 +19,7 @@ export interface FeeSummaryViewProps {
   fromChain: SupportedChainId;
   toChain: SupportedChainId;
   amount: string;
+  transferMethod: TransferMethod;
   currentPosition: { x: number; y: number };
   initialPosition: { x: number; y: number };
   isMinimized: boolean;
