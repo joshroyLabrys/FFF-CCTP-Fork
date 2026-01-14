@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "simplebar-react/dist/simplebar.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,7 +120,117 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow: hidden;
+    height: 100%;
+  }
   body {
     @apply bg-background text-foreground;
+    height: 100%;
+    overflow: hidden;
   }
+}
+
+/* macOS-style SimpleBar scrollbar */
+.simplebar-scrollbar::before {
+  background-color: rgba(0, 0, 0, 0.35);
+  border-radius: 100px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dark .simplebar-scrollbar::before {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1;
+}
+
+/* Hover state - slightly more opaque */
+.simplebar-scrollbar:hover::before {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dark .simplebar-scrollbar:hover::before {
+  background-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Track styling */
+.simplebar-track {
+  background: transparent;
+  border-radius: 100px;
+}
+
+.simplebar-track.simplebar-vertical {
+  width: 12px;
+  right: 2px;
+}
+
+.simplebar-track.simplebar-horizontal {
+  height: 12px;
+  bottom: 2px;
+}
+
+/* Scrollbar thumb sizing - macOS thin style */
+.simplebar-track.simplebar-vertical .simplebar-scrollbar {
+  width: 6px;
+  right: 3px;
+}
+
+.simplebar-track.simplebar-horizontal .simplebar-scrollbar {
+  height: 6px;
+  bottom: 3px;
+}
+
+/* Show scrollbar on hover of container */
+.simplebar-track.simplebar-vertical .simplebar-scrollbar::before {
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+}
+
+.simplebar-track.simplebar-horizontal .simplebar-scrollbar::before {
+  left: 2px;
+  right: 2px;
+  top: 0;
+  bottom: 0;
+}
+
+/* Content wrapper */
+.simplebar-content-wrapper {
+  outline: none;
+}
+
+/* Hide native scrollbar within simplebar */
+.simplebar-content-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* Auto-hide behavior - macOS style */
+.simplebar-track {
+  pointer-events: none;
+}
+
+.simplebar-track .simplebar-scrollbar {
+  pointer-events: auto;
+}
+
+/* Window-specific scrollbar styling */
+.macos-window-scrollbar .simplebar-track.simplebar-vertical {
+  width: 10px;
+  right: 4px;
+}
+
+.macos-window-scrollbar .simplebar-track.simplebar-vertical .simplebar-scrollbar {
+  width: 5px;
+  right: 2px;
+}
+
+/* For theme toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }

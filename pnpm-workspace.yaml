@@ -1,0 +1,12 @@
+overrides:
+  '@metamask/sdk-communication-layer@>=0.16.0 <=0.33.0': '>=0.33.1'
+  '@metamask/sdk@>=0.16.0 <=0.33.0': '>=0.33.1'
+  axios@>=1.0.0 <1.12.0: '>=1.12.0'
+  valibot@>=0.31.0 <1.2.0: '>=1.2.0'
+  '@modelcontextprotocol/sdk@<1.24.0': '>=1.24.0'
+
+patchedDependencies:
+  '@circle-fin/bridge-kit': patches/@circle-fin__bridge-kit.patch
+  '@circle-fin/adapter-viem-v2': patches/@circle-fin__adapter-viem-v2.patch
+  '@circle-fin/adapter-solana': patches/@circle-fin__adapter-solana.patch
+  '@circle-fin/provider-cctp-v2@1.0.5': patches/@circle-fin__provider-cctp-v2@1.0.5.patch
