@@ -49,21 +49,34 @@ vi.mock("@solana/web3.js", () => {
   };
 });
 
-// Create mock wallets
+// Create mock wallets that match IWallet interface
 const createMockEVMWallet = (address: string) => ({
   type: "evm",
+  chainType: "evm" as const,
   address,
+  connectorKey: "metamask",
   connector: { key: "metamask" },
   getWalletClient: vi.fn().mockResolvedValue({ provider: "mock-provider" }),
+  getEVMProvider: vi.fn().mockResolvedValue({ provider: "mock-provider" }),
 });
 
 const createMockSolanaWallet = (address: string) => ({
   type: "solana",
+  chainType: "solana" as const,
   address,
+  connectorKey: "phantom",
   connector: { key: "phantom" },
   getConnection: vi
     .fn()
     .mockResolvedValue({ rpcEndpoint: "https://api.devnet.solana.com" }),
+  getSolanaProvider: vi.fn().mockResolvedValue({
+    publicKey: { toString: () => address },
+    signTransaction: vi.fn(),
+    signAllTransactions: vi.fn(),
+  }),
+  getSolanaConnection: vi.fn().mockResolvedValue({
+    rpcEndpoint: "https://api.devnet.solana.com",
+  }),
 });
 
 describe("AdapterFactory", () => {
@@ -136,8 +149,8 @@ describe("AdapterFactory", () => {
 
       // Should return cached adapter
       expect(adapter1).toBe(adapter2);
-      // Wallet client should only be called once due to caching
-      expect(wallet.getWalletClient).toHaveBeenCalledTimes(1);
+      // EVM provider should only be called once due to caching
+      expect(wallet.getEVMProvider).toHaveBeenCalledTimes(1);
     });
 
     it("should create different adapters for different network types", async () => {
@@ -241,7 +254,7 @@ describe("AdapterFactory", () => {
         "evm",
       );
 
-      expect(wallet.getWalletClient).toHaveBeenCalledTimes(2);
+      expect(wallet.getEVMProvider).toHaveBeenCalledTimes(2);
     });
 
     it("should clear cache for specific wallet address only", async () => {
@@ -269,14 +282,14 @@ describe("AdapterFactory", () => {
         wallet1 as unknown as Parameters<typeof factory.getAdapter>[0],
         "evm",
       );
-      expect(wallet1.getWalletClient).toHaveBeenCalledTimes(2);
+      expect(wallet1.getEVMProvider).toHaveBeenCalledTimes(2);
 
       // wallet2 should still use cached adapter
       await factory.getAdapter(
         wallet2 as unknown as Parameters<typeof factory.getAdapter>[0],
         "evm",
       );
-      expect(wallet2.getWalletClient).toHaveBeenCalledTimes(1);
+      expect(wallet2.getEVMProvider).toHaveBeenCalledTimes(1);
     });
   });
 
