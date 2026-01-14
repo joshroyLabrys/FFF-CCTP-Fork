@@ -1,7 +1,6 @@
 import type { AdapterContext, ChainDefinition } from "@circle-fin/bridge-kit";
 import type { SupportedChainId } from "./networks";
-import type { Wallet } from "node_modules/@dynamic-labs/sdk-react-core/src/lib/shared/types/wallets";
-import type { WalletConnectorCore } from "@dynamic-labs/wallet-connector-core";
+import type { IWallet } from "~/lib/wallet/types";
 
 /**
  * Transfer method for bridging
@@ -120,9 +119,9 @@ export interface BridgeParams {
   /** Transfer method: 'standard' (slow, low fees) or 'fast' (quick, higher fees) */
   transferMethod?: TransferMethod;
   /** Explicit source wallet for signing source chain transactions */
-  sourceWallet?: Wallet<WalletConnectorCore.WalletConnector>;
+  sourceWallet?: IWallet;
   /** Explicit destination wallet for signing destination chain transactions */
-  destWallet?: Wallet<WalletConnectorCore.WalletConnector>;
+  destWallet?: IWallet;
 }
 
 /**
@@ -142,10 +141,7 @@ export interface IBridgeService {
   /**
    * Initialize the bridge service with user wallet
    */
-  initialize(
-    wallet?: Wallet<WalletConnectorCore.WalletConnector>,
-    allWallets?: Wallet<WalletConnectorCore.WalletConnector>[],
-  ): Promise<void>;
+  initialize(wallet?: IWallet, allWallets?: IWallet[]): Promise<void>;
   /**
    * Get token balance for a specific chain
    */

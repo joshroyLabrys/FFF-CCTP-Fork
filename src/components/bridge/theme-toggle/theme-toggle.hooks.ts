@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { flushSync } from "react-dom";
 
+const duration = 700;
+
 export function useThemeToggle() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -29,10 +31,11 @@ export function useThemeToggle() {
   }, []);
 
   useEffect(() => {
-    const syncTheme = () =>
+    const updateTheme = () => {
       setIsDark(document.documentElement.classList.contains("dark"));
-
-    const observer = new MutationObserver(syncTheme);
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
@@ -42,42 +45,31 @@ export function useThemeToggle() {
 
   const toggleTheme = useCallback(async () => {
     if (!buttonRef.current) return;
-
-    if (!document.startViewTransition) {
-      const toggled = !isDark;
-      setIsDark(toggled);
-      document.documentElement.classList.toggle("dark", toggled);
-      localStorage.setItem("theme", toggled ? "dark" : "light");
-      return;
-    }
-
     await document.startViewTransition(() => {
       flushSync(() => {
-        const toggled = !isDark;
-        setIsDark(toggled);
-        document.documentElement.classList.toggle("dark", toggled);
-        localStorage.setItem("theme", toggled ? "dark" : "light");
+        const newTheme = !isDark;
+        setIsDark(newTheme);
+        document.documentElement.classList.toggle("dark");
+        localStorage.setItem("theme", newTheme ? "dark" : "light");
       });
     }).ready;
-
-    const { left, top, width, height } =
+    const { top, left, width, height } =
       buttonRef.current.getBoundingClientRect();
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
-    const maxDistance = Math.hypot(
-      Math.max(centerX, window.innerWidth - centerX),
-      Math.max(centerY, window.innerHeight - centerY),
+    const x = left + width / 2;
+    const y = top + height / 2;
+    const maxRadius = Math.hypot(
+      Math.max(left, window.innerWidth - left),
+      Math.max(top, window.innerHeight - top),
     );
-
     document.documentElement.animate(
       {
         clipPath: [
-          `circle(0px at ${centerX}px ${centerY}px)`,
-          `circle(${maxDistance}px at ${centerX}px ${centerY}px)`,
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${maxRadius}px at ${x}px ${y}px)`,
         ],
       },
       {
-        duration: 700,
+        duration,
         easing: "ease-in-out",
         pseudoElement: "::view-transition-new(root)",
       },

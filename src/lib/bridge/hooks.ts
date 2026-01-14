@@ -2,15 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  useDynamicContext,
-  useDynamicModals,
-  useUserWallets,
-  useSwitchWallet,
-} from "@dynamic-labs/sdk-react-core";
-import { isEthereumWallet } from "@dynamic-labs/ethereum";
-import { isSolanaWallet } from "@dynamic-labs/solana";
-import { isSuiWallet } from "@dynamic-labs/sui";
+import { useWalletContext } from "~/lib/wallet/wallet-context";
+import { useDynamicLinkWalletModal } from "~/lib/wallet/providers/dynamic/context";
+import type { IWallet } from "~/lib/wallet/types";
 import { getBridgeService } from "./service";
 import { useBridgeStore } from "./store";
 import type {
@@ -24,20 +18,21 @@ import { NETWORK_CONFIGS } from "./networks";
 import { bridgeKeys } from "./query-keys";
 
 /**
- * Custom hook that provides wallets filtered by type with proper type guards
- * This avoids the need for `any` types and eslint-disable comments
+ * Custom hook that provides wallets filtered by type
+ * Uses the provider-agnostic wallet context
  */
 export function useWalletsByType() {
-  const rawWallets = useUserWallets();
+  const { evmWallets, solanaWallets, suiWallets, allWallets } =
+    useWalletContext();
 
   const walletsByType = useMemo(() => {
     return {
-      ethereum: rawWallets.filter(isEthereumWallet),
-      solana: rawWallets.filter(isSolanaWallet),
-      sui: rawWallets.filter(isSuiWallet),
-      all: rawWallets,
+      ethereum: evmWallets,
+      solana: solanaWallets,
+      sui: suiWallets,
+      all: allWallets,
     };
-  }, [rawWallets]);
+  }, [evmWallets, solanaWallets, suiWallets, allWallets]);
 
   return walletsByType;
 }
@@ -46,8 +41,7 @@ export function useWalletsByType() {
  * Hook to initialize bridge service with wallet
  */
 export function useBridgeInit() {
-  const { primaryWallet } = useDynamicContext();
-  const { all: allWallets } = useWalletsByType();
+  const { primaryWallet, allWallets } = useWalletContext();
   const setUserAddress = useBridgeStore((state) => state.setUserAddress);
   const loadTransactions = useBridgeStore((state) => state.loadTransactions);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -283,7 +277,7 @@ export function useTransactionHistory() {
  */
 export function useNetworkAutoSwitch() {
   const fromChain = useBridgeStore((state) => state.fromChain);
-  const { primaryWallet } = useDynamicContext();
+  const { primaryWallet } = useWalletContext();
   const { solana: solanaWallets } = useWalletsByType();
   const [isSwitching, setIsSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
@@ -307,7 +301,9 @@ export function useNetworkAutoSwitch() {
         setIsSwitching(true);
         setSwitchError(null);
 
-        const currentConnection = await solanaWallet.getConnection();
+        if (!solanaWallet.getSolanaConnection) return;
+
+        const currentConnection = await solanaWallet.getSolanaConnection();
         const currentRpc: string = currentConnection.rpcEndpoint;
 
         const isMainnet = currentRpc.includes("mainnet");
@@ -346,12 +342,11 @@ export function useNetworkAutoSwitch() {
 export function useWalletForNetwork(
   networkType: "evm" | "solana" | "sui" | null,
 ) {
-  const { setSelectedTabIndex } = useDynamicContext();
-  const { setShowLinkNewWalletModal } = useDynamicModals();
+  const { showLinkWalletModal } = useDynamicLinkWalletModal();
   const walletsByType = useWalletsByType();
-  const [compatibleWallet, setCompatibleWallet] = useState<
-    ReturnType<typeof useUserWallets>[number] | null
-  >(null);
+  const [compatibleWallet, setCompatibleWallet] = useState<IWallet | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!networkType) {
@@ -371,19 +366,10 @@ export function useWalletForNetwork(
 
   const promptWalletConnection = useCallback(
     (_chainName?: string) => {
-      let tabIndex = 0;
-      if (networkType === "evm") {
-        tabIndex = 1; // Ethereum tab
-      } else if (networkType === "solana") {
-        tabIndex = 2; // Solana tab
-      } else if (networkType === "sui") {
-        tabIndex = 4; // SUI tab
-      }
-
-      setSelectedTabIndex(tabIndex);
-      setShowLinkNewWalletModal(true);
+      // Show the link wallet modal to add a new wallet
+      showLinkWalletModal();
     },
-    [networkType, setSelectedTabIndex, setShowLinkNewWalletModal],
+    [showLinkWalletModal],
   );
 
   return {
@@ -392,9 +378,6 @@ export function useWalletForNetwork(
     promptWalletConnection,
   };
 }
-
-// Re-export the full Wallet type for use in components that need it
-export type { Wallet } from "@dynamic-labs/wallet-connector-core";
 
 /**
  * Hook for managing source and destination wallet selection
@@ -414,14 +397,18 @@ export function useWalletSelection(
   hasCompatibleSourceWallet: boolean;
   hasCompatibleDestWallet: boolean;
   // Full wallet objects for bridge service
-  selectedSourceWalletFull:
-    | ReturnType<typeof useUserWallets>[number]
-    | undefined;
-  selectedDestWalletFull: ReturnType<typeof useUserWallets>[number] | undefined;
+  selectedSourceWalletFull: IWallet | undefined;
+  selectedDestWalletFull: IWallet | undefined;
 } {
   const walletsByType = useWalletsByType();
-  const { primaryWallet } = useDynamicContext();
-  const switchWallet = useSwitchWallet();
+  const walletContext = useWalletContext();
+  const { primaryWallet } = walletContext;
+
+  // Wrap switchWallet to avoid "this" binding issues
+  const switchWallet = useCallback(
+    (walletId: string) => walletContext.switchWallet(walletId),
+    [walletContext],
+  );
   const [selectedSourceWalletId, setSelectedSourceWalletId] = useState<
     string | null
   >(null);
@@ -500,16 +487,33 @@ export function useWalletSelection(
     (w) => w.id === selectedDestWalletId,
   );
 
+  // Convert IWallet to WalletOption for UI consumption
+  const toWalletOption = (wallet: IWallet): WalletOption => ({
+    id: wallet.id,
+    address: wallet.address,
+    connector: {
+      key: wallet.connectorKey,
+      name: wallet.connectorName,
+    },
+  });
+
+  const sourceWalletsAsOptions = sourceWallets.map(toWalletOption);
+  const destWalletsAsOptions = destWallets.map(toWalletOption);
+
   return {
     // Source wallet
-    sourceWallets: sourceWallets as WalletOption[],
-    selectedSourceWallet: selectedSourceWallet as WalletOption | undefined,
+    sourceWallets: sourceWalletsAsOptions,
+    selectedSourceWallet: selectedSourceWallet
+      ? toWalletOption(selectedSourceWallet)
+      : undefined,
     selectedSourceWalletId,
     handleSelectSourceWallet,
 
     // Destination wallet
-    destWallets: destWallets as WalletOption[],
-    selectedDestWallet: selectedDestWallet as WalletOption | undefined,
+    destWallets: destWalletsAsOptions,
+    selectedDestWallet: selectedDestWallet
+      ? toWalletOption(selectedDestWallet)
+      : undefined,
     selectedDestWalletId,
     handleSelectDestWallet,
 

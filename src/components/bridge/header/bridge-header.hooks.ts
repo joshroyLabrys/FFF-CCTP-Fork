@@ -1,23 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useWalletContext } from "~/lib/wallet/wallet-context";
 import { useEnvironment } from "~/lib/bridge";
 import { useCCTPExplainer } from "../cctp-explainer";
 
 export function useHeaderState() {
-  const {
-    setShowAuthFlow,
-    primaryWallet,
-    handleLogOut,
-    setShowDynamicUserProfile,
-    showDynamicUserProfile,
-  } = useDynamicContext();
+  const walletContext = useWalletContext();
+  const { primaryWallet, isWalletManagerOpen } = walletContext;
 
   const environment = useEnvironment();
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showPongGame, setShowPongGame] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   // CCTP Explainer (managed via store)
   const {
@@ -30,20 +26,20 @@ export function useHeaderState() {
   const walletAddress = primaryWallet?.address ?? null;
 
   const handleConnectWallet = useCallback(() => {
-    setShowAuthFlow(true);
-  }, [setShowAuthFlow]);
+    walletContext.showConnectModal();
+  }, [walletContext]);
 
   const handleManageWallets = useCallback(() => {
-    setShowDynamicUserProfile(true);
-  }, [setShowDynamicUserProfile]);
+    walletContext.showWalletManager();
+  }, [walletContext]);
 
   const handleLogout = useCallback(() => {
-    void handleLogOut();
-  }, [handleLogOut]);
+    void walletContext.disconnect();
+  }, [walletContext]);
 
   const handleCloseDynamicProfile = useCallback(() => {
-    setShowDynamicUserProfile(false);
-  }, [setShowDynamicUserProfile]);
+    walletContext.hideWalletManager();
+  }, [walletContext]);
 
   const handleToggleTransactionHistory = useCallback(() => {
     setShowTransactionHistory((prev) => !prev);
@@ -81,17 +77,26 @@ export function useHeaderState() {
     setShowPongGame(true);
   }, []);
 
+  const handleOpenCommandPalette = useCallback(() => {
+    setCommandPaletteOpen(true);
+  }, []);
+
+  const handleCloseCommandPalette = useCallback(() => {
+    setCommandPaletteOpen(false);
+  }, []);
+
   return {
     // Wallet state
     isConnected,
     walletAddress,
-    showDynamicUserProfile,
+    showDynamicUserProfile: isWalletManagerOpen,
 
     // Panel visibility
     showTransactionHistory,
     showDisclaimer,
     showPongGame,
     showExplainer,
+    commandPaletteOpen,
 
     // Environment
     environment,
@@ -112,5 +117,7 @@ export function useHeaderState() {
     onOpenDisclaimer: handleOpenDisclaimer,
     onOpenPongGame: handleOpenPongGame,
     onOpenExplainer: handleOpenExplainer,
+    onOpenCommandPalette: handleOpenCommandPalette,
+    onCloseCommandPalette: handleCloseCommandPalette,
   };
 }

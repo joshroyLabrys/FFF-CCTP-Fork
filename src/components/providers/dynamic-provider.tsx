@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   DynamicContextProvider,
   FilterChain,
@@ -15,6 +16,30 @@ import {
   ArbitrumIcon,
   SuiIcon,
 } from "@dynamic-labs/iconic";
+
+import { WalletProvider } from "~/lib/wallet/wallet-context";
+import {
+  useDynamicWalletContext,
+  DynamicWalletAdapter,
+} from "~/lib/wallet/providers/dynamic";
+import { WalletProviderRegistry } from "~/lib/wallet/provider-registry";
+
+/**
+ * Bridge component that connects Dynamic's context to the unified wallet context
+ */
+function WalletContextBridge({ children }: { children: React.ReactNode }) {
+  // Register Dynamic adapter on mount
+  useEffect(() => {
+    if (!WalletProviderRegistry.hasAdapter()) {
+      WalletProviderRegistry.register(new DynamicWalletAdapter());
+    }
+  }, []);
+
+  // Bridge Dynamic's context to our unified context
+  const walletContext = useDynamicWalletContext();
+
+  return <WalletProvider value={walletContext}>{children}</WalletProvider>;
+}
 
 export const DynamicProvider = ({
   children,
@@ -67,7 +92,7 @@ export const DynamicProvider = ({
         },
       }}
     >
-      {children}
+      <WalletContextBridge>{children}</WalletContextBridge>
     </DynamicContextProvider>
   );
 };

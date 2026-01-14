@@ -5,29 +5,8 @@
 
 import type { AdapterContext } from "@circle-fin/bridge-kit";
 import type { SupportedChainId } from "../networks";
+import type { TokenBalance } from "../types";
 import { NETWORK_CONFIGS } from "../networks";
-
-/**
- * Balance information for a specific token
- */
-export interface TokenBalance {
-  /**
-   * Raw balance (e.g., "1000000" for 1 USDC with 6 decimals)
-   */
-  balance: string;
-  /**
-   * Human-readable balance (e.g., "1.00")
-   */
-  formatted: string;
-  /**
-   * Token decimals
-   */
-  decimals: number;
-  /**
-   * Token symbol
-   */
-  symbol: string;
-}
 
 /**
  * Balance Service for fetching token balances across all networks

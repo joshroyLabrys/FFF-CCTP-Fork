@@ -262,9 +262,7 @@ export function useBridgeCardState() {
 
   const isValidAmount = Boolean(amount && parseFloat(amount) > 0);
 
-  const needsSourceWallet = Boolean(
-    fromChain && !selectedSourceWalletId,
-  );
+  const needsSourceWallet = Boolean(fromChain && !selectedSourceWalletId);
 
   const canBridge = Boolean(
     isInitialized &&

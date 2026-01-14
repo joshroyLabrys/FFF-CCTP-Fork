@@ -13,14 +13,14 @@ import {
   AlertTriangle,
   Gamepad2,
   Github,
-  Twitter,
   FileText,
   ExternalLink,
   Search,
   LogOut,
 } from "lucide-react";
+import { XIcon } from "~/components/icons";
 import { cn } from "~/lib/utils";
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useWalletContext } from "~/lib/wallet/wallet-context";
 import { useEnvironment, useSetEnvironment } from "~/lib/bridge";
 import { WindowPortal } from "~/components/ui/window-portal";
 
@@ -28,21 +28,36 @@ interface CommandPaletteProps {
   onOpenTransactionHistory: () => void;
   onOpenDisclaimer: () => void;
   onOpenGame: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CommandPalette({
   onOpenTransactionHistory,
   onOpenDisclaimer,
   onOpenGame,
+  open: controlledOpen,
+  onOpenChange,
 }: CommandPaletteProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const newValue = typeof value === "function" ? value(open) : value;
+      if (isControlled) {
+        onOpenChange?.(newValue);
+      } else {
+        setInternalOpen(newValue);
+      }
+    },
+    [isControlled, onOpenChange, open],
+  );
   const [isDark, setIsDark] = useState(false);
-  const {
-    setShowAuthFlow,
-    setShowDynamicUserProfile,
-    primaryWallet,
-    handleLogOut,
-  } = useDynamicContext();
+  const walletContext = useWalletContext();
+  const { primaryWallet } = walletContext;
   const environment = useEnvironment();
   const setEnvironment = useSetEnvironment();
 
@@ -73,7 +88,7 @@ export function CommandPalette({
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        setOpen((prev) => !prev);
       }
       // Also close on Escape
       if (e.key === "Escape") {
@@ -83,12 +98,15 @@ export function CommandPalette({
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [setOpen]);
 
-  const runCommand = useCallback((command: () => void) => {
-    setOpen(false);
-    command();
-  }, []);
+  const runCommand = useCallback(
+    (command: () => void) => {
+      setOpen(false);
+      command();
+    },
+    [setOpen],
+  );
 
   return (
     <WindowPortal>
@@ -173,13 +191,15 @@ export function CommandPalette({
                       <>
                         <CommandItem
                           onSelect={() =>
-                            runCommand(() => setShowDynamicUserProfile(true))
+                            runCommand(() => walletContext.showWalletManager())
                           }
                           icon={<Wallet className="size-4" />}
                           label="Manage Wallets"
                         />
                         <CommandItem
-                          onSelect={() => runCommand(() => void handleLogOut())}
+                          onSelect={() =>
+                            runCommand(() => void walletContext.disconnect())
+                          }
                           icon={<LogOut className="size-4" />}
                           label="Disconnect"
                           destructive
@@ -187,7 +207,9 @@ export function CommandPalette({
                       </>
                     ) : (
                       <CommandItem
-                        onSelect={() => runCommand(() => setShowAuthFlow(true))}
+                        onSelect={() =>
+                          runCommand(() => walletContext.showConnectModal())
+                        }
                         icon={<Wallet className="size-4" />}
                         label="Connect Wallet"
                       />
@@ -227,7 +249,10 @@ export function CommandPalette({
                     <CommandItem
                       onSelect={() =>
                         runCommand(() =>
-                          window.open("https://github.com", "_blank"),
+                          window.open(
+                            "https://github.com/mjkid221/cctp-bridge",
+                            "_blank",
+                          ),
                         )
                       }
                       icon={<Github className="size-4" />}
@@ -237,24 +262,24 @@ export function CommandPalette({
                     <CommandItem
                       onSelect={() =>
                         runCommand(() =>
-                          window.open("https://twitter.com", "_blank"),
+                          window.open("https://x.com/mjkid0", "_blank"),
                         )
                       }
-                      icon={<Twitter className="size-4" />}
-                      label="Twitter"
+                      icon={<XIcon className="size-4" />}
+                      label="Creator"
                       external
                     />
                     <CommandItem
                       onSelect={() =>
                         runCommand(() =>
                           window.open(
-                            "https://developers.circle.com/stablecoins/docs/cctp-getting-started",
+                            "https://developers.circle.com/bridge-kit#bridge-kit",
                             "_blank",
                           ),
                         )
                       }
                       icon={<FileText className="size-4" />}
-                      label="CCTP Documentation"
+                      label="Bridge Kit Documentation"
                       external
                     />
                   </Command.Group>

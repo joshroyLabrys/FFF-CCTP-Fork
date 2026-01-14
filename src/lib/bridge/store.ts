@@ -113,7 +113,7 @@ export const useBridgeStore = create<BridgeState>()(
     (set, get) => ({
       // Initial state
       _hasHydrated: false,
-      environment: "testnet",
+      environment: "mainnet",
       transferMethod: "standard",
       userAddress: null,
       fromChain: null,

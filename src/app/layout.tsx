@@ -8,7 +8,7 @@ import { DynamicProvider } from "~/components/providers/dynamic-provider";
 import { RootScrollArea } from "~/components/ui/scroll-area";
 
 export const metadata: Metadata = {
-  title: "CCTP Bridge - Cross-Chain USDC Transfer",
+  title: "FFF CCTP Bridge - Cross-Chain USDC Transfer",
   description:
     "Bridge USDC across chains instantly with Circle's Cross-Chain Transfer Protocol",
   icons: [{ rel: "icon", url: "/favicon.ico" }],

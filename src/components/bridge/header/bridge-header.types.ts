@@ -1,5 +1,3 @@
-"use client";
-
 export interface BridgeHeaderViewProps {
   // Wallet state
   isConnected: boolean;
@@ -10,6 +8,8 @@ export interface BridgeHeaderViewProps {
   showTransactionHistory: boolean;
   showDisclaimer: boolean;
   showPongGame: boolean;
+  showExplainer: boolean;
+  commandPaletteOpen: boolean;
 
   // Environment
   environment: "mainnet" | "testnet";
@@ -22,6 +22,16 @@ export interface BridgeHeaderViewProps {
   onToggleTransactionHistory: () => void;
   onToggleDisclaimer: () => void;
   onTogglePongGame: () => void;
+  onCloseTransactionHistory: () => void;
+  onCloseDisclaimer: () => void;
+  onClosePongGame: () => void;
+  onCloseExplainer: () => void;
+  onOpenTransactionHistory: () => void;
+  onOpenDisclaimer: () => void;
+  onOpenPongGame: () => void;
+  onOpenExplainer: () => void;
+  onOpenCommandPalette: () => void;
+  onCloseCommandPalette: () => void;
 }
 
 export interface WindowControlsProps {

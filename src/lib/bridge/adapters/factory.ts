@@ -5,20 +5,14 @@
 
 import { createViemAdapterFromProvider as createEvmAdapter } from "@circle-fin/adapter-viem-v2";
 import { createSolanaAdapterFromProvider as createSolanaAdapter } from "@circle-fin/adapter-solana";
-import { isEthereumWallet } from "@dynamic-labs/ethereum";
-import { isSolanaWallet } from "@dynamic-labs/solana";
-import type {
-  Wallet,
-  WalletConnectorCore,
-} from "@dynamic-labs/wallet-connector-core";
 import type { AdapterContext } from "@circle-fin/bridge-kit";
+import { Connection } from "@solana/web3.js";
+import type { IWallet } from "~/lib/wallet/types";
 import {
   type NetworkType,
   NETWORK_CONFIGS,
   type SupportedChainId,
 } from "../networks";
-import { DynamicSolanaWalletAdapter } from "~/lib/solana/provider";
-import { Connection } from "@solana/web3.js";
 
 // Solana RPC endpoints (from Circle's adapter defaults)
 const SOLANA_RPC_ENDPOINTS = {
@@ -35,9 +29,9 @@ type BridgeAdapter = AdapterContext["adapter"];
  */
 export interface IAdapterCreator {
   readonly networkType: NetworkType;
-  canHandle(wallet: Wallet<WalletConnectorCore.WalletConnector>): boolean;
+  canHandle(wallet: IWallet): boolean;
   createAdapter(
-    wallet: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet: IWallet,
     chainId?: SupportedChainId,
   ): Promise<BridgeAdapter>;
 }
@@ -49,8 +43,8 @@ export interface IAdapterCreator {
 export class EVMAdapterCreator implements IAdapterCreator {
   readonly networkType: NetworkType = "evm";
 
-  canHandle(wallet: Wallet<WalletConnectorCore.WalletConnector>): boolean {
-    return isEthereumWallet(wallet);
+  canHandle(wallet: IWallet): boolean {
+    return wallet.chainType === "evm";
   }
 
   /**
@@ -59,13 +53,18 @@ export class EVMAdapterCreator implements IAdapterCreator {
    * may be different from the wallet's current network
    */
   static async switchNetwork(
-    wallet: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet: IWallet,
     targetChainId: number,
   ): Promise<void> {
-    if (!isEthereumWallet(wallet)) {
+    if (wallet.chainType !== "evm") {
       console.warn(
         "[EVMAdapter] Cannot switch network: wallet is not an EVM wallet",
       );
+      return;
+    }
+
+    if (!wallet.switchNetwork) {
+      console.warn("[EVMAdapter] Wallet does not support network switching");
       return;
     }
 
@@ -83,22 +82,24 @@ export class EVMAdapterCreator implements IAdapterCreator {
   }
 
   async createAdapter(
-    wallet: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet: IWallet,
     _chainId?: SupportedChainId,
   ): Promise<BridgeAdapter> {
-    if (!isEthereumWallet(wallet)) {
+    if (wallet.chainType !== "evm") {
       throw new Error("Wallet is not an Ethereum wallet");
     }
 
-    const providerResult = await wallet.getWalletClient();
+    if (!wallet.getEVMProvider) {
+      throw new Error("Wallet does not support EVM provider");
+    }
+
+    const providerResult = await wallet.getEVMProvider();
 
     if (!providerResult) {
       throw new Error("Failed to get EVM wallet client");
     }
 
     // Create EVM adapter using Circle's factory
-    // Dynamic's wallet client is EIP-1193 compatible but TypeScript types don't align exactly
-    // Use unknown as intermediate cast for type safety
     return await createEvmAdapter({
       provider: providerResult as unknown as Parameters<
         typeof createEvmAdapter
@@ -114,20 +115,24 @@ export class EVMAdapterCreator implements IAdapterCreator {
 export class SolanaAdapterCreator implements IAdapterCreator {
   readonly networkType: NetworkType = "solana";
 
-  canHandle(wallet: Wallet<WalletConnectorCore.WalletConnector>): boolean {
-    return isSolanaWallet(wallet);
+  canHandle(wallet: IWallet): boolean {
+    return wallet.chainType === "solana";
   }
 
   async createAdapter(
-    wallet: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet: IWallet,
     chainId?: SupportedChainId,
   ): Promise<BridgeAdapter> {
-    if (!isSolanaWallet(wallet)) {
+    if (wallet.chainType !== "solana") {
       throw new Error("Wallet is not a Solana wallet");
     }
 
-    // Create wrapper for Solana Wallet Provider class (for Dynamic)
-    const solanaProvider = new DynamicSolanaWalletAdapter(wallet);
+    if (!wallet.getSolanaProvider) {
+      throw new Error("Wallet does not support Solana provider");
+    }
+
+    // Get Solana provider from wallet abstraction
+    const solanaProvider = await wallet.getSolanaProvider();
 
     // Determine RPC endpoint based on chain environment
     let rpcEndpoint: string;
@@ -140,12 +145,17 @@ export class SolanaAdapterCreator implements IAdapterCreator {
       console.log(
         `[SolanaAdapter] Using ${network?.environment} RPC for chain ${chainId}: ${rpcEndpoint}`,
       );
-    } else {
+    } else if (wallet.getSolanaConnection) {
       // Fallback to wallet's current RPC if no chain specified
-      rpcEndpoint = (await wallet.getConnection()).rpcEndpoint;
+      const connection = await wallet.getSolanaConnection();
+      rpcEndpoint = connection.rpcEndpoint;
       console.log(
         `[SolanaAdapter] Using wallet RPC (no chain specified): ${rpcEndpoint}`,
       );
+    } else {
+      // Default to mainnet if we can't determine
+      rpcEndpoint = SOLANA_RPC_ENDPOINTS.mainnet;
+      console.log(`[SolanaAdapter] Defaulting to mainnet RPC: ${rpcEndpoint}`);
     }
 
     const connection = new Connection(rpcEndpoint);
@@ -195,7 +205,7 @@ export class AdapterFactory {
    * @param chainId - Optional chain ID for environment-specific RPC selection
    */
   async getAdapter(
-    wallet: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet: IWallet,
     networkType: NetworkType,
     chainId?: SupportedChainId,
   ): Promise<BridgeAdapter> {
@@ -218,7 +228,7 @@ export class AdapterFactory {
     // Verify wallet compatibility
     if (!creator.canHandle(wallet)) {
       throw new Error(
-        `Wallet ${wallet.connector.key} is not compatible with ${networkType}`,
+        `Wallet ${wallet.connectorKey} is not compatible with ${networkType}`,
       );
     }
 

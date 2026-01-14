@@ -1,15 +1,13 @@
 import { BridgeKit, type BridgeResult } from "@circle-fin/bridge-kit";
 import type { AdapterContext } from "@circle-fin/bridge-kit";
 import { nanoid } from "nanoid";
-import type {
-  Wallet,
-  WalletConnectorCore,
-} from "@dynamic-labs/wallet-connector-core";
+import type { IWallet } from "~/lib/wallet/types";
 import type {
   BridgeEstimate,
   BridgeParams,
   BridgeTransaction,
   IBridgeService,
+  TokenBalance,
   TransferMethod,
 } from "./types";
 import { BridgeStorage } from "./storage";
@@ -21,7 +19,6 @@ import {
   EVMAdapterCreator,
 } from "./adapters/factory";
 import { getBalanceService, type BalanceService } from "./balance/service";
-import type { TokenBalance } from "./balance/service";
 import { getAttestationTime } from "./attestation-times";
 import { BridgeEventManager } from "./event-manager";
 import { useBridgeStore } from "./store";
@@ -75,7 +72,7 @@ export class CCTPBridgeService implements IBridgeService {
   private readonly eventManager: BridgeEventManager;
 
   private userAddress: string | null = null;
-  private wallets: Wallet<WalletConnectorCore.WalletConnector>[] = [];
+  private wallets: IWallet[] = [];
 
   constructor(config: BridgeServiceConfig = {}) {
     this.kit = new BridgeKit();
@@ -101,10 +98,7 @@ export class CCTPBridgeService implements IBridgeService {
   /**
    * Initialize the bridge service with user wallet
    */
-  async initialize(
-    wallet?: Wallet<WalletConnectorCore.WalletConnector>,
-    allWallets?: Wallet<WalletConnectorCore.WalletConnector>[],
-  ): Promise<void> {
+  async initialize(wallet?: IWallet, allWallets?: IWallet[]): Promise<void> {
     if (!wallet?.address) {
       throw new Error("Address is required");
     }
@@ -163,7 +157,7 @@ export class CCTPBridgeService implements IBridgeService {
    */
   private async getAdapterForChainWithWallet(
     chain: SupportedChainId,
-    wallet?: Wallet<WalletConnectorCore.WalletConnector>,
+    wallet?: IWallet,
   ): Promise<AdapterContext["adapter"]> {
     const network = NETWORK_CONFIGS[chain];
     if (!network) {
