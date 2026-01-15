@@ -74,6 +74,11 @@ export function useBridgeCardState() {
     promptWalletConnection: promptDestWalletConnection,
   } = useWalletForNetwork(toNetworkType);
 
+  // Source network wallet prompt (for connecting wallet when missing)
+  const fromNetworkType = fromChain ? NETWORK_CONFIGS[fromChain]?.type : null;
+  const { promptWalletConnection: promptSourceWalletConnection } =
+    useWalletForNetwork(fromNetworkType);
+
   // Get all connected wallets by type for minting wallet check
   const walletsByType = useWalletsByType();
 
@@ -262,7 +267,13 @@ export function useBridgeCardState() {
 
   const isValidAmount = Boolean(amount && parseFloat(amount) > 0);
 
-  const needsSourceWallet = Boolean(fromChain && !selectedSourceWalletId);
+  // Check if selected source wallet is valid for the current source chain
+  // This handles the case where user switches chains and the previously selected
+  // wallet is no longer compatible with the new chain type
+  const hasValidSourceWallet = sourceWallets.some(
+    (w) => w.id === selectedSourceWalletId,
+  );
+  const needsSourceWallet = Boolean(fromChain && !hasValidSourceWallet);
 
   const canBridge = Boolean(
     isInitialized &&
@@ -270,7 +281,7 @@ export function useBridgeCardState() {
     toChain &&
     isValidAmount &&
     !isBridging &&
-    selectedSourceWalletId &&
+    hasValidSourceWallet &&
     (useCustomAddress
       ? isAddressValid && hasWalletForDestNetwork
       : hasDestWallet && selectedDestWalletId),
@@ -329,6 +340,8 @@ export function useBridgeCardState() {
     destNetworkName,
     onBridge: handleBridge,
     onPromptDestWallet: promptDestWalletConnection,
+    onPromptSourceWallet: promptSourceWalletConnection,
+    fromNetworkType,
     bridgeCardRef,
     beamContainerRef,
   };

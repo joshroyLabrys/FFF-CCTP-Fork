@@ -16,9 +16,11 @@ import {
   AlertCircle,
   AlertTriangle,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { NETWORK_CONFIGS } from "~/lib/bridge/networks";
+import { getAttestationTimeDisplay } from "~/lib/bridge/attestation-times";
 import { DraggableFeeSummary } from "./fee-summary";
 import type { BridgeCardViewProps } from "./bridge-card.types";
 
@@ -63,6 +65,8 @@ export function BridgeCardView({
   destNetworkName,
   onBridge,
   onPromptDestWallet,
+  onPromptSourceWallet,
+  fromNetworkType,
   bridgeCardRef,
   beamContainerRef,
 }: BridgeCardViewProps) {
@@ -142,6 +146,44 @@ export function BridgeCardView({
                   networkType={NETWORK_CONFIGS[fromChain]?.type ?? "evm"}
                 />
               )}
+
+              {/* Source Wallet Warning */}
+              <AnimatePresence>
+                {needsSourceWallet && fromChain && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                    className="bg-muted/30 overflow-hidden rounded-xl p-1 backdrop-blur-xl"
+                  >
+                    <div className="bg-card/80 border-border/50 flex items-center gap-3 rounded-lg border p-3 shadow-sm">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10">
+                        <AlertCircle className="size-4 text-blue-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-foreground text-sm font-medium">
+                          Connect {fromNetworkType === "evm" ? "EVM" : "Solana"}{" "}
+                          wallet
+                        </p>
+                        <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
+                          Required to send USDC from{" "}
+                          {NETWORK_CONFIGS[fromChain]?.name}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() =>
+                          onPromptSourceWallet(NETWORK_CONFIGS[fromChain]?.name)
+                        }
+                        size="sm"
+                        className="h-8 shrink-0 border-0 bg-blue-500/10 px-3 text-xs font-medium text-blue-600 hover:bg-blue-500/20 dark:text-blue-400"
+                      >
+                        Connect
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Amount Input */}
               <AmountInput
@@ -359,6 +401,24 @@ export function BridgeCardView({
                     ) : (
                       <span className="font-medium text-green-600 dark:text-green-500">
                         FREE (0%)
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Clock className="size-3" />
+                      Est. time
+                    </span>
+                    {isEstimating ? (
+                      <Skeleton className="h-3 w-16 sm:h-4 sm:w-20" />
+                    ) : (
+                      <span className="text-foreground font-medium">
+                        {fromChain
+                          ? getAttestationTimeDisplay(
+                              fromChain,
+                              transferMethod === "fast",
+                            )
+                          : "~13 min"}
                       </span>
                     )}
                   </div>

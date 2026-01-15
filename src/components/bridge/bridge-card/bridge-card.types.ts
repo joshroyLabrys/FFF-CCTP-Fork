@@ -63,6 +63,8 @@ export interface BridgeCardViewProps {
   // Actions
   onBridge: () => Promise<void>;
   onPromptDestWallet: (chainName?: string) => void;
+  onPromptSourceWallet: (chainName?: string) => void;
+  fromNetworkType: NetworkType | null;
 
   // Refs
   bridgeCardRef: React.RefObject<HTMLDivElement | null>;

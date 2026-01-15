@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useWalletContext } from "~/lib/wallet/wallet-context";
 import { useDynamicLinkWalletModal } from "~/lib/wallet/providers/dynamic/context";
+import { getTabIndexForNetwork } from "~/lib/wallet/providers/dynamic/tab-utils";
 import type { IWallet } from "~/lib/wallet/types";
 import { getBridgeService } from "./service";
 import { useBridgeStore } from "./store";
@@ -343,10 +345,15 @@ export function useWalletForNetwork(
   networkType: "evm" | "solana" | "sui" | null,
 ) {
   const { showLinkWalletModal } = useDynamicLinkWalletModal();
+  const { setSelectedTabIndex, setShowAuthFlow } = useDynamicContext();
   const walletsByType = useWalletsByType();
+  const { allWallets } = useWalletContext();
   const [compatibleWallet, setCompatibleWallet] = useState<IWallet | null>(
     null,
   );
+
+  // Check if user is logged in (has any wallets connected)
+  const isLoggedIn = allWallets.length > 0;
 
   useEffect(() => {
     if (!networkType) {
@@ -366,10 +373,25 @@ export function useWalletForNetwork(
 
   const promptWalletConnection = useCallback(
     (_chainName?: string) => {
-      // Show the link wallet modal to add a new wallet
-      showLinkWalletModal();
+      // Set the correct tab based on network type before showing modal
+      const tabIndex = getTabIndexForNetwork(networkType);
+      setSelectedTabIndex(tabIndex);
+
+      if (isLoggedIn) {
+        // User is logged in but needs a different wallet type - show link wallet modal
+        showLinkWalletModal();
+      } else {
+        // User is not logged in - show the main auth/connect flow
+        setShowAuthFlow(true);
+      }
     },
-    [showLinkWalletModal],
+    [
+      showLinkWalletModal,
+      setSelectedTabIndex,
+      setShowAuthFlow,
+      networkType,
+      isLoggedIn,
+    ],
   );
 
   return {
@@ -441,31 +463,54 @@ export function useWalletSelection(
     return [];
   }, [toNetworkType, walletsByType]);
 
-  // Auto-select primary wallet as source if compatible
+  // Auto-select source wallet: prefer primary wallet if compatible, else first available
   useEffect(() => {
+    if (sourceWallets.length === 0) {
+      setSelectedSourceWalletId(null);
+      return;
+    }
+
+    // Check if current selection is still valid
+    const currentSelectionValid = sourceWallets.some(
+      (w) => w.id === selectedSourceWalletId,
+    );
+    if (currentSelectionValid) return;
+
+    // Prefer primary wallet if compatible
     if (primaryWallet && sourceWallets.some((w) => w.id === primaryWallet.id)) {
       setSelectedSourceWalletId(primaryWallet.id);
+      return;
     }
-  }, [primaryWallet, sourceWallets]);
 
-  // Auto-select first compatible wallet as destination
-  useEffect(() => {
-    if (toNetworkType && destWallets.length > 0 && !selectedDestWalletId) {
-      // Prefer a different wallet from source if available, but allow same wallet if it's the only option
-      const differentWallet = destWallets.find(
-        (w) => w.id !== selectedSourceWalletId,
-      );
-      const walletToSelect = differentWallet ?? destWallets[0];
-      if (walletToSelect) {
-        setSelectedDestWalletId(walletToSelect.id);
-      }
+    // Fall back to first available wallet
+    const firstWallet = sourceWallets[0];
+    if (firstWallet) {
+      setSelectedSourceWalletId(firstWallet.id);
     }
-  }, [
-    toNetworkType,
-    destWallets,
-    selectedSourceWalletId,
-    selectedDestWalletId,
-  ]);
+  }, [primaryWallet, sourceWallets, selectedSourceWalletId]);
+
+  // Auto-select destination wallet: prefer different wallet from source, else first available
+  useEffect(() => {
+    if (destWallets.length === 0) {
+      setSelectedDestWalletId(null);
+      return;
+    }
+
+    // Check if current selection is still valid
+    const currentSelectionValid = destWallets.some(
+      (w) => w.id === selectedDestWalletId,
+    );
+    if (currentSelectionValid) return;
+
+    // Prefer a different wallet from source if available
+    const differentWallet = destWallets.find(
+      (w) => w.id !== selectedSourceWalletId,
+    );
+    const walletToSelect = differentWallet ?? destWallets[0];
+    if (walletToSelect) {
+      setSelectedDestWalletId(walletToSelect.id);
+    }
+  }, [destWallets, selectedSourceWalletId, selectedDestWalletId]);
 
   const handleSelectSourceWallet = useCallback(
     (walletId: string) => {
