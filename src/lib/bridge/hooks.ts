@@ -69,6 +69,8 @@ export function useBridgeInit() {
   }, [primaryWallet, allWallets, setUserAddress, loadTransactions]);
 
   // Auto-load in-progress transaction after page refresh (runs only once)
+  // Note: We load the transaction into state but do NOT auto-open the window
+  // User can access it via transaction history or notifications
   useEffect(() => {
     if (!isInitialized || hasAutoLoadedRef.current) return;
 
@@ -92,10 +94,9 @@ export function useBridgeInit() {
 
         const setCurrentTransaction =
           useBridgeStore.getState().setCurrentTransaction;
-        const setActiveWindow = useBridgeStore.getState().setActiveWindow;
 
         setCurrentTransaction(inProgressTx);
-        setActiveWindow("bridge-progress");
+        // Removed: setActiveWindow("bridge-progress") - don't auto-open window on refresh
       } else {
         hasAutoLoadedRef.current = true;
       }
@@ -218,6 +219,80 @@ export function useRetryBridge() {
   );
 
   return { retryBridge, isRetrying, error };
+}
+
+/**
+ * Hook for resuming in-progress transactions after page refresh.
+ * This is used to continue attestation polling when the user
+ * refreshes the page or reopens a transaction window.
+ */
+export function useResumeBridge() {
+  const [isResuming, setIsResuming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const updateTransaction = useBridgeStore((state) => state.updateTransaction);
+
+  const resumeBridge = useCallback(
+    async (transactionId: string): Promise<BridgeTransaction> => {
+      setIsResuming(true);
+      setError(null);
+
+      try {
+        const service = getBridgeService();
+        const transaction = await service.resume(transactionId);
+
+        updateTransaction(transaction.id, transaction);
+
+        return transaction;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Resume failed";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsResuming(false);
+      }
+    },
+    [updateTransaction],
+  );
+
+  return { resumeBridge, isResuming, error };
+}
+
+/**
+ * Hook for recovering stuck transactions without bridgeResult.
+ * This handles the case where user refreshes during attestation polling
+ * and bridgeResult was never saved. Uses reconstructed BridgeResult to retry.
+ */
+export function useRecoverBridge() {
+  const [isRecovering, setIsRecovering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const updateTransaction = useBridgeStore((state) => state.updateTransaction);
+
+  const recoverBridge = useCallback(
+    async (transactionId: string): Promise<BridgeTransaction> => {
+      setIsRecovering(true);
+      setError(null);
+
+      try {
+        const service = getBridgeService();
+        const transaction = await service.recover(transactionId);
+
+        updateTransaction(transaction.id, transaction);
+
+        return transaction;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Recovery failed";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsRecovering(false);
+      }
+    },
+    [updateTransaction],
+  );
+
+  return { recoverBridge, isRecovering, error };
 }
 
 /**

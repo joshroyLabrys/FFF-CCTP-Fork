@@ -238,46 +238,46 @@ export function BridgeCardView({
                     </div>
                   </div>
 
-                  <AnimatePresence mode="wait">
-                    {useCustomAddress ? (
+                  <div className="relative" style={{ perspective: "1000px" }}>
+                    <AnimatePresence mode="wait">
                       <motion.div
-                        key="custom-input"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
+                        key={
+                          useCustomAddress ? "custom-input" : "wallet-selector"
+                        }
+                        initial={{ rotateY: -90, opacity: 0, scale: 0.9 }}
+                        animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+                        exit={{ rotateY: 90, opacity: 0, scale: 0.9 }}
+                        transition={{
+                          duration: 0.4,
+                          ease: [0.34, 1.56, 0.64, 1],
+                        }}
+                        style={{ transformStyle: "preserve-3d" }}
                       >
-                        <DestinationAddressInput
-                          networkType={toNetworkType}
-                          value={customAddress}
-                          onChange={onCustomAddressChange}
-                          onValidationChange={onAddressValidationChange}
-                          useCustomAddress={useCustomAddress}
-                          onToggleCustomAddress={onUseCustomAddressChange}
-                          connectedWalletAddress={
-                            selectedDestWalletAddress ?? destWalletAddress
-                          }
-                        />
+                        {useCustomAddress ? (
+                          <DestinationAddressInput
+                            networkType={toNetworkType}
+                            value={customAddress}
+                            onChange={onCustomAddressChange}
+                            onValidationChange={onAddressValidationChange}
+                            useCustomAddress={useCustomAddress}
+                            onToggleCustomAddress={onUseCustomAddressChange}
+                            connectedWalletAddress={
+                              selectedDestWalletAddress ?? destWalletAddress
+                            }
+                          />
+                        ) : (
+                          <WalletSelector
+                            wallets={destWallets}
+                            selectedWalletId={selectedDestWalletId}
+                            onSelectWallet={onSelectDestWallet}
+                            label=""
+                            networkType={NETWORK_CONFIGS[toChain]?.type ?? "evm"}
+                            placeholder="Select destination wallet"
+                          />
+                        )}
                       </motion.div>
-                    ) : (
-                      <motion.div
-                        key="wallet-selector"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <WalletSelector
-                          wallets={destWallets}
-                          selectedWalletId={selectedDestWalletId}
-                          onSelectWallet={onSelectDestWallet}
-                          label=""
-                          networkType={NETWORK_CONFIGS[toChain]?.type ?? "evm"}
-                          placeholder="Select destination wallet"
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </AnimatePresence>
+                  </div>
                 </div>
               )}
 
@@ -379,14 +379,16 @@ export function BridgeCardView({
                     <span className="text-muted-foreground">
                       {transferMethod === "fast" ? "CCTP fee" : "Bridge fee"}
                     </span>
-                    {transferMethod === "fast" &&
-                    estimate?.providerFees &&
-                    estimate.providerFees.length > 0 ? (
+                    {isEstimating ? (
+                      <Skeleton className="h-3 w-20 sm:h-4 sm:w-24" />
+                    ) : transferMethod === "fast" &&
+                      estimate?.providerFees &&
+                      estimate.providerFees.length > 0 ? (
                       <span className="font-medium text-amber-600 dark:text-amber-400">
                         ~0.1% (
                         {estimate.providerFees
                           .reduce((sum, fee) => sum + parseFloat(fee.amount), 0)
-                          .toFixed(4)}{" "}
+                          .toFixed(6)}{" "}
                         USDC)
                       </span>
                     ) : (
