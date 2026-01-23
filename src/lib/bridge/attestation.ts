@@ -112,7 +112,10 @@ export async function fetchAttestation(
             attempt,
           });
 
-          if (attestationResult.status === "complete" && attestationResult.attestation) {
+          if (
+            attestationResult.status === "complete" &&
+            attestationResult.attestation
+          ) {
             return attestationResult;
           }
 

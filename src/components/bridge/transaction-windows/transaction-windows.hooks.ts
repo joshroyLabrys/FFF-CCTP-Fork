@@ -11,7 +11,11 @@ import {
   constrainToViewport,
   NETWORK_CONFIGS,
 } from "~/lib/bridge";
-import { useRetryBridge, useResumeBridge, useRecoverBridge } from "~/lib/bridge/hooks";
+import {
+  useRetryBridge,
+  useResumeBridge,
+  useRecoverBridge,
+} from "~/lib/bridge/hooks";
 import { useUpdateNotification, useNotifications } from "~/lib/notifications";
 import { parseTransactionError, useBridgeStore } from "~/lib/bridge";
 import type { TransactionWindowProps } from "./transaction-windows.types";
@@ -99,7 +103,11 @@ export function useMultiWindowBridgeProgressState({
     if (!transaction || hasAttemptedResumeRef.current) return;
 
     // Early exit for terminal states - prevents re-triggering after completion
-    if (transaction.status === "completed" || transaction.status === "failed" || transaction.status === "cancelled") {
+    if (
+      transaction.status === "completed" ||
+      transaction.status === "failed" ||
+      transaction.status === "cancelled"
+    ) {
       return;
     }
 
@@ -171,7 +179,9 @@ export function useMultiWindowBridgeProgressState({
     // Find the notification linked to this transaction
     const notificationId =
       transaction.notificationId ??
-      notificationsRef.current.find((n) => n.bridgeTransactionId === transaction.id)?.id;
+      notificationsRef.current.find(
+        (n) => n.bridgeTransactionId === transaction.id,
+      )?.id;
 
     if (!notificationId) return;
 

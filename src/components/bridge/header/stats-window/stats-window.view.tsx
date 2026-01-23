@@ -40,7 +40,7 @@ export function StatsWindowView({
           damping: 25,
           stiffness: 300,
         }}
-        className="fixed top-14 right-4 hidden w-full max-w-sm lg:block"
+        className="fixed top-14 right-4 hidden w-full max-w-md lg:block"
         style={{ zIndex: 200 }}
       >
         {/* Theme-aware glassmorphic container */}

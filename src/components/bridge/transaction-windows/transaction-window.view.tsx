@@ -15,7 +15,13 @@ import {
   Zap,
   Wallet,
 } from "lucide-react";
-import { parseStepError, getExplorerTxUrl, getExplorerAddressUrl } from "~/lib/bridge";
+import {
+  parseStepError,
+  getExplorerTxUrl,
+  getExplorerAddressUrl,
+  getTransactionDisplayAddress,
+  formatAddressShort,
+} from "~/lib/bridge";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { ScrollArea } from "~/components/ui/scroll-area";
@@ -205,29 +211,51 @@ export function TransactionWindowView({
                       <span className="text-muted-foreground text-sm font-semibold">
                         USDC
                       </span>
-                      {transaction.transferMethod === "fast" && transaction.providerFeeUsdc && parseFloat(transaction.providerFeeUsdc) > 0 && (
-                        <span className="text-muted-foreground text-[10px]">
-                          (fee: <span className="text-amber-500">{parseFloat(transaction.providerFeeUsdc).toFixed(6)}</span>)
-                        </span>
-                      )}
-                      <span className="text-muted-foreground mx-1 text-[10px]">|</span>
+                      {transaction.transferMethod === "fast" &&
+                        transaction.providerFeeUsdc &&
+                        parseFloat(transaction.providerFeeUsdc) > 0 && (
+                          <span className="text-muted-foreground text-[10px]">
+                            (fee:{" "}
+                            <span className="text-amber-500">
+                              {parseFloat(transaction.providerFeeUsdc).toFixed(
+                                6,
+                              )}
+                            </span>
+                            )
+                          </span>
+                        )}
+                      <span className="text-muted-foreground mx-1 text-[10px]">
+                        |
+                      </span>
                       <div className="text-muted-foreground flex items-center gap-1 text-[10px]">
                         <a
-                          href={getExplorerAddressUrl(transaction.fromChain, transaction.sourceAddress ?? transaction.userAddress)}
+                          href={getExplorerAddressUrl(
+                            transaction.fromChain,
+                            transaction.sourceAddress ??
+                              transaction.userAddress,
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-primary font-mono transition-colors"
                         >
-                          {(transaction.sourceAddress ?? transaction.userAddress).slice(0, 6)}...{(transaction.sourceAddress ?? transaction.userAddress).slice(-4)}
+                          {formatAddressShort(
+                            transaction.sourceAddress ??
+                              transaction.userAddress,
+                          )}
                         </a>
                         <ArrowRight className="size-2.5" />
                         <a
-                          href={getExplorerAddressUrl(transaction.toChain, transaction.destinationAddress ?? transaction.recipientAddress ?? transaction.userAddress)}
+                          href={getExplorerAddressUrl(
+                            transaction.toChain,
+                            getTransactionDisplayAddress(transaction),
+                          )}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-primary font-mono transition-colors"
                         >
-                          {(transaction.destinationAddress ?? transaction.recipientAddress ?? transaction.userAddress).slice(0, 6)}...{(transaction.destinationAddress ?? transaction.recipientAddress ?? transaction.userAddress).slice(-4)}
+                          {formatAddressShort(
+                            getTransactionDisplayAddress(transaction),
+                          )}
                         </a>
                       </div>
                     </div>

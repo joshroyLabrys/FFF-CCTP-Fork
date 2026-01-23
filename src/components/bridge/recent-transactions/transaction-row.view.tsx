@@ -38,7 +38,8 @@ export function TransactionRow({
 
   // Get addresses with fallbacks for older transactions
   const sourceAddress = tx.sourceAddress ?? tx.userAddress;
-  const destAddress = tx.destinationAddress ?? tx.recipientAddress ?? tx.userAddress;
+  const destAddress =
+    tx.destinationAddress ?? tx.recipientAddress ?? tx.userAddress;
 
   return (
     <motion.div
@@ -91,14 +92,17 @@ export function TransactionRow({
               <span>•</span>
               <span>{formatTimestamp(tx.createdAt)}</span>
               {/* Show provider fee for completed fast transactions */}
-              {isCompleted && isFastMode && tx.providerFeeUsdc && parseFloat(tx.providerFeeUsdc) > 0 && (
-                <>
-                  <span>•</span>
-                  <span className="text-amber-500">
-                    Fee: {parseFloat(tx.providerFeeUsdc).toFixed(6)} USDC
-                  </span>
-                </>
-              )}
+              {isCompleted &&
+                isFastMode &&
+                tx.providerFeeUsdc &&
+                parseFloat(tx.providerFeeUsdc) > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-amber-500">
+                      Fee: {parseFloat(tx.providerFeeUsdc).toFixed(6)} USDC
+                    </span>
+                  </>
+                )}
             </div>
             {/* Wallet addresses */}
             <div className="mt-1.5 flex items-center gap-1.5 text-[10px]">

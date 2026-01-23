@@ -77,6 +77,17 @@ export {
   getAddressFormatDescription,
 } from "./address-validation";
 
+// Utility functions
+export {
+  NETWORK_TYPE_LABELS,
+  getNetworkTypeLabel,
+  getWalletKeyForNetworkType,
+  hasWalletForNetworkType,
+  getWalletsForNetworkType,
+  getTransactionDisplayAddress,
+  formatAddressShort,
+} from "./utils";
+
 // Error parsing
 export { parseTransactionError, parseStepError } from "./error-parser";
 export type { ParsedError } from "./error-parser";

@@ -335,7 +335,6 @@ export const useBridgeStore = create<BridgeState>()(
             return { transactions: updated };
           }
 
-          // Add new transaction to the beginning of the list
           return {
             transactions: [transaction, ...state.transactions],
           };
@@ -350,7 +349,6 @@ export const useBridgeStore = create<BridgeState>()(
           ),
         }));
 
-        // Update in IndexedDB
         const transaction = get().transactions.find((tx) => tx.id === id);
         if (transaction) {
           void BridgeStorage.saveTransaction({
@@ -362,7 +360,6 @@ export const useBridgeStore = create<BridgeState>()(
       },
 
       cancelTransaction: async (id) => {
-        // Update status to "cancelled" in memory
         set((state) => ({
           transactions: state.transactions.map((tx) =>
             tx.id === id
@@ -376,10 +373,8 @@ export const useBridgeStore = create<BridgeState>()(
               : state.currentTransaction,
         }));
 
-        // Close the transaction window if open
         get().closeTransactionWindow(id);
 
-        // Update in IndexedDB
         const transaction = get().transactions.find((tx) => tx.id === id);
         if (transaction) {
           await BridgeStorage.saveTransaction({

@@ -20,6 +20,7 @@ import {
   useCurrentTransaction,
   parseTransactionError,
   useBridgeStore,
+  hasWalletForNetworkType,
 } from "~/lib/bridge";
 import { useAddNotification, useUpdateNotification } from "~/lib/notifications";
 import { NETWORK_CONFIGS } from "~/lib/bridge/networks";
@@ -84,15 +85,10 @@ export function useBridgeCardState() {
 
   // Check if user has a wallet for the destination network type
   // This is needed when using custom addresses - user still needs a wallet to sign mint tx
-  const hasWalletForDestNetwork = toNetworkType
-    ? toNetworkType === "evm"
-      ? walletsByType.ethereum.length > 0
-      : toNetworkType === "solana"
-        ? walletsByType.solana.length > 0
-        : toNetworkType === "sui"
-          ? walletsByType.sui.length > 0
-          : false
-    : false;
+  const hasWalletForDestNetwork = hasWalletForNetworkType(
+    toNetworkType,
+    walletsByType,
+  );
 
   // Local state
   const [amount, setAmount] = useState("");
@@ -110,7 +106,15 @@ export function useBridgeCardState() {
     isLoading: isBridging,
     error: bridgeError,
   } = useBridge();
-  const { estimateBridge, estimate, isEstimating } = useBridgeEstimate();
+  const { data: estimateData, isLoading: isEstimating } = useBridgeEstimate({
+    fromChain,
+    toChain,
+    amount,
+    recipientAddress: useCustomAddress ? customAddress : undefined,
+    transferMethod,
+  });
+  // React Query returns undefined when no data, but component expects null
+  const estimate = estimateData ?? null;
   const { balance } = useWalletBalance(fromChain);
 
   // Refs
@@ -162,27 +166,6 @@ export function useBridgeCardState() {
     updateTransactionInStore(currentTransaction.id, { notificationId });
     pendingNotificationRef.current = null;
   }, [currentTransaction?.id, updateNotification, updateTransactionInStore]);
-
-  // Estimate on amount/chain change
-  useEffect(() => {
-    if (fromChain && toChain && amount && parseFloat(amount) > 0) {
-      void estimateBridge({
-        fromChain,
-        toChain,
-        amount,
-        recipientAddress: useCustomAddress ? customAddress : undefined,
-        transferMethod,
-      });
-    }
-  }, [
-    fromChain,
-    toChain,
-    amount,
-    useCustomAddress,
-    customAddress,
-    transferMethod,
-    estimateBridge,
-  ]);
 
   const handleBridge = useCallback(async () => {
     if (!fromChain || !toChain || !amount) return;

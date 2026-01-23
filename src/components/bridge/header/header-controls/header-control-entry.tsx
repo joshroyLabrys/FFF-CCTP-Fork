@@ -16,12 +16,10 @@ export function HeaderControlEntry({
   control,
   viewProps,
 }: HeaderControlEntryProps) {
-  // Check visibility condition
   if (control.visible && !control.visible(viewProps)) {
     return null;
   }
 
-  // Get responsive visibility classes
   const getVisibilityClasses = () => {
     switch (control.visibleBreakpoint) {
       case "mobile":
@@ -35,7 +33,6 @@ export function HeaderControlEntry({
 
   const visibilityClasses = getVisibilityClasses();
 
-  // Render divider
   if (control.type === "divider") {
     return (
       <div
@@ -47,7 +44,6 @@ export function HeaderControlEntry({
     );
   }
 
-  // Render component
   if (control.type === "component" && control.component) {
     const Component = control.component as React.ComponentType<{
       isDragging?: boolean;
@@ -59,7 +55,6 @@ export function HeaderControlEntry({
     );
   }
 
-  // Render icon button
   if (control.type === "icon-button" && control.icon) {
     const Icon = control.icon;
     const badge =
@@ -94,7 +89,6 @@ export function HeaderControlEntry({
     );
   }
 
-  // Render wallet button
   if (control.type === "wallet") {
     return <WalletButton viewProps={viewProps} />;
   }

@@ -119,6 +119,7 @@ export const NETWORK_CONFIGS: Record<SupportedChainId, NetworkConfig> = {
     icon: "◈",
     color: "from-purple-500/20 to-violet-600/20",
     explorerUrl: "https://monadexplorer.com",
+    evmChainId: 143,
     nativeCurrency: {
       name: "Monad",
       symbol: "MON",
@@ -134,6 +135,7 @@ export const NETWORK_CONFIGS: Record<SupportedChainId, NetworkConfig> = {
     icon: "◇",
     color: "from-emerald-500/20 to-teal-600/20",
     explorerUrl: "https://hyperscan.com",
+    evmChainId: 999,
     nativeCurrency: {
       name: "Hype",
       symbol: "HYPE",
@@ -219,6 +221,7 @@ export const NETWORK_CONFIGS: Record<SupportedChainId, NetworkConfig> = {
     icon: "◈",
     color: "from-purple-500/20 to-violet-600/20",
     explorerUrl: "https://testnet.monadexplorer.com",
+    evmChainId: 10143,
     nativeCurrency: {
       name: "Monad",
       symbol: "MON",
@@ -234,6 +237,7 @@ export const NETWORK_CONFIGS: Record<SupportedChainId, NetworkConfig> = {
     icon: "◇",
     color: "from-emerald-500/20 to-teal-600/20",
     explorerUrl: "https://testnet.purrsec.com",
+    evmChainId: 998,
     nativeCurrency: {
       name: "Hype",
       symbol: "HYPE",

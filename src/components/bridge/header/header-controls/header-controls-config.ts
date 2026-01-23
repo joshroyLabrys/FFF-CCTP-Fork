@@ -43,10 +43,8 @@ export const HEADER_CONTROLS_CONFIG: HeaderControlItem[] = [
     id: "stats",
     type: "icon-button",
     icon: LayoutDashboard,
-    iconClassName: "ml-[6px]",
     onClick: (props) => props.onToggleStats(),
     ariaLabel: "Bridge Stats",
-    visibleBreakpoint: "desktop",
   },
 
   // Notifications

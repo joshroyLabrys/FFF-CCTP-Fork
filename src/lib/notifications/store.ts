@@ -38,10 +38,8 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   isLoaded: false,
 
   loadNotifications: async () => {
-    // Only load once
     if (get().isLoaded) return;
 
-    // Load from IndexedDB
     const notifications = await NotificationStorage.getAll();
     set({ notifications, isLoaded: true });
   },
@@ -57,10 +55,8 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
       read: false,
     };
 
-    // Save to IndexedDB
     await NotificationStorage.save(newNotification);
 
-    // Update in-memory state (keep last 50)
     set((state) => ({
       notifications: [newNotification, ...state.notifications].slice(0, 50),
     }));
@@ -76,10 +72,8 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   },
 
   updateNotification: async (id, updates) => {
-    // Update in IndexedDB
     await NotificationStorage.update(id, updates);
 
-    // Update in-memory state
     set((state) => ({
       notifications: state.notifications.map((n) =>
         n.id === id ? { ...n, ...updates } : n,
@@ -88,52 +82,39 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
   },
 
   removeNotification: async (id) => {
-    // Remove from IndexedDB
     await NotificationStorage.remove(id);
 
-    // Update in-memory state
     set((state) => ({
       notifications: state.notifications.filter((n) => n.id !== id),
     }));
   },
 
   markAsRead: (id) => {
-    // Mark as read in memory (also persist to IndexedDB)
     set((state) => ({
       notifications: state.notifications.map((n) =>
         n.id === id ? { ...n, read: true } : n,
       ),
     }));
 
-    // Persist to IndexedDB (fire and forget)
-    NotificationStorage.update(id, { read: true }).catch(() => {
-      // Ignore errors for read status
-    });
+    void NotificationStorage.update(id, { read: true });
   },
 
   markAllAsRead: () => {
     const notifications = get().notifications;
 
-    // Update in-memory state
     set({
       notifications: notifications.map((n) => ({ ...n, read: true })),
     });
 
-    // Persist to IndexedDB (fire and forget)
-    Promise.all(
+    void Promise.all(
       notifications
         .filter((n) => !n.read)
         .map((n) => NotificationStorage.update(n.id, { read: true })),
-    ).catch(() => {
-      // Ignore errors for read status
-    });
+    );
   },
 
   clearAll: async () => {
-    // Clear from IndexedDB
     await NotificationStorage.clearAll();
-
-    // Clear in-memory state
     set({ notifications: [] });
   },
 

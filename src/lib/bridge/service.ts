@@ -35,6 +35,7 @@ import { getAttestationTime } from "./attestation-times";
 import { BridgeEventManager } from "./event-manager";
 import { useBridgeStore } from "./store";
 import { fetchAttestation, requestReAttestation } from "./attestation";
+import { getViemChain } from "./chain-utils";
 
 /**
  * Get CCTP configuration for a chain from the SDK
@@ -538,15 +539,35 @@ export class CCTPBridgeService implements IBridgeService {
     const toAdapter = await this.getAdapterForChain(originalTx.toChain);
     const bridgeResult = originalTx.bridgeResult as BridgeResult;
 
-    // Switch wallet to destination chain before retrying
-    // This is critical after page refresh when wallet may be on wrong network
-    const toNetwork = NETWORK_CONFIGS[originalTx.toChain];
-    if (toNetwork.type === "evm" && toNetwork.evmChainId) {
-      const evmWallet = this.wallets.find((w) => w.chainType === "evm");
-      if (evmWallet) {
-        await EVMAdapterCreator.switchNetwork(evmWallet, toNetwork.evmChainId);
+    // Ensure destination chain is added BEFORE Bridge Kit execution
+    // This is critical because Bridge Kit uses raw EIP-1193 provider directly
+    await this.ensureDestinationChainReady(originalTx.toChain);
+
+    // Determine which chain to switch to based on transaction state
+    // If approve/burn steps are incomplete, we need source chain; otherwise destination for mint
+    const needsSourceChain = originalTx.steps.some(
+      (step) =>
+        (step.name.toLowerCase() === "approve" ||
+          step.name.toLowerCase() === "burn") &&
+        step.status !== "completed",
+    );
+
+    if (needsSourceChain) {
+      // Switch to source chain for approve/burn retry
+      const fromNetwork = NETWORK_CONFIGS[originalTx.fromChain];
+      if (fromNetwork.type === "evm" && fromNetwork.evmChainId) {
+        const evmWallet = this.wallets.find((w) => w.chainType === "evm");
+        if (evmWallet) {
+          await EVMAdapterCreator.switchNetwork(
+            evmWallet,
+            fromNetwork.evmChainId,
+            originalTx.fromChain,
+          );
+        }
       }
+      // Solana doesn't require explicit network switching
     }
+    // No else needed - Bridge Kit will handle switching to destination for mint
 
     // Reuse existing transaction to keep same ID for windows and event tracking
     const transaction = originalTx;
@@ -674,15 +695,35 @@ export class CCTPBridgeService implements IBridgeService {
     const toAdapter = await this.getAdapterForChain(transaction.toChain);
     const bridgeResult = transaction.bridgeResult as BridgeResult;
 
-    // Switch wallet to destination chain before resuming
-    // This is critical after page refresh when wallet may be on wrong network
-    const toNetwork = NETWORK_CONFIGS[transaction.toChain];
-    if (toNetwork.type === "evm" && toNetwork.evmChainId) {
-      const evmWallet = this.wallets.find((w) => w.chainType === "evm");
-      if (evmWallet) {
-        await EVMAdapterCreator.switchNetwork(evmWallet, toNetwork.evmChainId);
+    // Ensure destination chain is added BEFORE Bridge Kit execution
+    // This is critical because Bridge Kit uses raw EIP-1193 provider directly
+    await this.ensureDestinationChainReady(transaction.toChain);
+
+    // Determine which chain to switch to based on transaction state
+    // If approve/burn steps are incomplete, we need source chain; otherwise destination for mint
+    const needsSourceChain = transaction.steps.some(
+      (step) =>
+        (step.name.toLowerCase() === "approve" ||
+          step.name.toLowerCase() === "burn") &&
+        step.status !== "completed",
+    );
+
+    if (needsSourceChain) {
+      // Switch to source chain for remaining source operations
+      const fromNetwork = NETWORK_CONFIGS[transaction.fromChain];
+      if (fromNetwork.type === "evm" && fromNetwork.evmChainId) {
+        const evmWallet = this.wallets.find((w) => w.chainType === "evm");
+        if (evmWallet) {
+          await EVMAdapterCreator.switchNetwork(
+            evmWallet,
+            fromNetwork.evmChainId,
+            transaction.fromChain,
+          );
+        }
       }
+      // Solana doesn't require explicit network switching
     }
+    // No else needed - Bridge Kit will handle switching to destination for mint
 
     // Update store to indicate we're resuming
     useBridgeStore.getState().setCurrentTransaction(transaction);
@@ -863,65 +904,60 @@ export class CCTPBridgeService implements IBridgeService {
         hasAttestation: !!attestation.attestation,
       });
 
-      // 3. Check if this is an EVM destination (we can execute mint directly)
-      if (toConfig.type === "evm") {
-        // Update mint step to in_progress
-        const mintStep = transaction.steps.find((s) => s.id === "mint");
-        if (mintStep) {
-          mintStep.status = "in_progress";
-          await this.storage.saveTransaction(transaction);
-          this.syncTransactionState(transaction);
-        }
-
-        // Execute receiveMessage (mint) directly on destination chain
-        const mintTxHash = await this.executeReceiveMessage(
-          transaction.toChain,
-          attestation.message,
-          attestation.attestation,
-        );
-
-        console.log("[Recovery] Mint executed successfully", { mintTxHash });
-
-        // 4. Update transaction as completed
-        if (mintStep) {
-          mintStep.status = "completed";
-          mintStep.txHash = mintTxHash;
-          mintStep.timestamp = Date.now();
-        }
-        transaction.destinationTxHash = mintTxHash;
-        transaction.status = "completed";
-        transaction.completedAt = Date.now();
-      } else if (toConfig.type === "solana") {
-        // Update mint step to in_progress
-        const mintStep = transaction.steps.find((s) => s.id === "mint");
-        if (mintStep) {
-          mintStep.status = "in_progress";
-          await this.storage.saveTransaction(transaction);
-          this.syncTransactionState(transaction);
-        }
-
-        // Execute receiveMessage via Solana adapter
-        const mintTxHash = await this.executeSolanaReceiveMessage(
-          transaction,
-          attestation,
-        );
-
-        console.log("[Recovery] Solana mint executed successfully", {
-          mintTxHash,
-        });
-
-        // Update transaction as completed
-        if (mintStep) {
-          mintStep.status = "completed";
-          mintStep.txHash = mintTxHash;
-          mintStep.timestamp = Date.now();
-        }
-        transaction.destinationTxHash = mintTxHash;
-        transaction.status = "completed";
-        transaction.completedAt = Date.now();
-      } else {
-        throw new Error(`Unsupported destination chain type: ${toConfig.type}`);
+      // 3. Execute mint based on destination chain type
+      const mintStep = transaction.steps.find((s) => s.id === "mint");
+      if (mintStep) {
+        mintStep.status = "in_progress";
+        await this.storage.saveTransaction(transaction);
+        this.syncTransactionState(transaction);
       }
+
+      let mintTxHash: string;
+      switch (toConfig.type) {
+        case "evm":
+          // Execute receiveMessage (mint) directly on destination chain
+          mintTxHash = await this.executeReceiveMessage(
+            transaction.toChain,
+            attestation.message,
+            attestation.attestation,
+          );
+          console.log("[Recovery] EVM mint executed successfully", {
+            mintTxHash,
+          });
+          break;
+
+        case "solana":
+          // Execute receiveMessage via Solana adapter
+          mintTxHash = await this.executeSolanaReceiveMessage(
+            transaction,
+            attestation,
+          );
+          console.log("[Recovery] Solana mint executed successfully", {
+            mintTxHash,
+          });
+          break;
+
+        case "sui":
+          // TODO: Implement SUI mint execution when SUI adapter is available
+          throw new Error("SUI recovery not yet implemented");
+
+        default: {
+          const _exhaustive: never = toConfig.type;
+          throw new Error(
+            `Unsupported destination chain type: ${String(_exhaustive)}`,
+          );
+        }
+      }
+
+      // 4. Update transaction as completed
+      if (mintStep) {
+        mintStep.status = "completed";
+        mintStep.txHash = mintTxHash;
+        mintStep.timestamp = Date.now();
+      }
+      transaction.destinationTxHash = mintTxHash;
+      transaction.status = "completed";
+      transaction.completedAt = Date.now();
     } catch (error) {
       // Mark transaction as failed but keep it recoverable
       const errorMessage =
@@ -992,7 +1028,11 @@ export class CCTPBridgeService implements IBridgeService {
     // Switch wallet to destination chain before executing receiveMessage
     // This is critical after page refresh when wallet may be on wrong network
     if (network.evmChainId) {
-      await EVMAdapterCreator.switchNetwork(evmWallet, network.evmChainId);
+      await EVMAdapterCreator.switchNetwork(
+        evmWallet,
+        network.evmChainId,
+        destinationChain,
+      );
     }
 
     // Get the EIP-1193 provider from the wallet using IWallet interface
@@ -1144,6 +1184,48 @@ export class CCTPBridgeService implements IBridgeService {
   // ==================== Private Helper Methods ====================
 
   /**
+   * Ensure the destination chain is added to the wallet before Bridge Kit tries to use it.
+   * This ONLY adds the chain - it does NOT switch to it.
+   * Bridge Kit will handle switching to the destination chain during the mint step.
+   */
+  private async ensureDestinationChainReady(
+    toChain: SupportedChainId,
+  ): Promise<void> {
+    const toNetwork = NETWORK_CONFIGS[toChain];
+
+    if (toNetwork.type !== "evm" || !toNetwork.evmChainId) {
+      // Non-EVM chains don't need this
+      return;
+    }
+
+    const evmWallet = this.wallets.find((w) => w.chainType === "evm");
+    if (!evmWallet?.addChain) {
+      return;
+    }
+
+    // Get the viem chain config for this destination
+    const viemChain = getViemChain(toChain);
+    if (!viemChain) {
+      console.warn(
+        `[Bridge] No viem chain config for ${toChain}, skipping pre-add`,
+      );
+      return;
+    }
+
+    try {
+      // ONLY add the chain - do NOT switch to it
+      // wallet_addEthereumChain will no-op if chain already exists in most wallets
+      await evmWallet.addChain(viemChain);
+      console.log(
+        `[Bridge] Destination chain ${toChain} (${toNetwork.evmChainId}) added to wallet`,
+      );
+    } catch (error) {
+      // Log but don't fail - chain might already exist, or Bridge Kit can try later
+      console.warn(`[Bridge] Failed to pre-add destination chain:`, error);
+    }
+  }
+
+  /**
    * Validate bridge parameters
    */
   private validateBridgeParams(params: BridgeParams): void {
@@ -1186,23 +1268,48 @@ export class CCTPBridgeService implements IBridgeService {
     const fromNetwork = NETWORK_CONFIGS[params.fromChain];
     const toNetwork = NETWORK_CONFIGS[params.toChain];
 
-    // Switch EVM wallets to correct network before creating adapters
-    if (toNetwork.type === "evm" && toNetwork.evmChainId && params.destWallet) {
-      await EVMAdapterCreator.switchNetwork(
-        params.destWallet,
-        toNetwork.evmChainId,
-      );
+    // Switch wallets to correct network before creating adapters
+    // Source network switching FIRST - user needs this for approve/burn steps
+    if (params.sourceWallet) {
+      switch (fromNetwork.type) {
+        case "evm":
+          if (fromNetwork.evmChainId) {
+            await EVMAdapterCreator.switchNetwork(
+              params.sourceWallet,
+              fromNetwork.evmChainId,
+              params.fromChain,
+            );
+          }
+          break;
+        case "solana":
+          // Solana doesn't require explicit network switching
+          break;
+        case "sui":
+          // TODO: Add SUI network switching when SUI adapter is available
+          break;
+      }
     }
 
-    if (
-      fromNetwork.type === "evm" &&
-      fromNetwork.evmChainId &&
-      params.sourceWallet
-    ) {
-      await EVMAdapterCreator.switchNetwork(
-        params.sourceWallet,
-        fromNetwork.evmChainId,
-      );
+    // Destination network switching SECOND (for mint step, handled later by Bridge Kit)
+    // Only switch if different wallet, otherwise Bridge Kit will handle mint step switching
+    if (params.destWallet && params.destWallet !== params.sourceWallet) {
+      switch (toNetwork.type) {
+        case "evm":
+          if (toNetwork.evmChainId) {
+            await EVMAdapterCreator.switchNetwork(
+              params.destWallet,
+              toNetwork.evmChainId,
+              params.toChain,
+            );
+          }
+          break;
+        case "solana":
+          // Solana doesn't require explicit network switching
+          break;
+        case "sui":
+          // TODO: Add SUI network switching when SUI adapter is available
+          break;
+      }
     }
 
     // Get wallet addresses for source and destination chains
@@ -1302,6 +1409,10 @@ export class CCTPBridgeService implements IBridgeService {
     context: BridgeOperationContext,
     transaction: BridgeTransaction,
   ): Promise<void> {
+    // Ensure destination chain is added BEFORE Bridge Kit tries to switch to it
+    // This is critical because Bridge Kit uses the raw EIP-1193 provider directly
+    await this.ensureDestinationChainReady(context.toChain);
+
     transaction.status = "bridging";
     const firstStep = transaction.steps[0];
     if (firstStep) {

@@ -125,7 +125,10 @@ export function useWindowState({
     if (windowRef.current) {
       const rect = windowRef.current.getBoundingClientRect();
       const draggedPosition = { x: rect.left, y: rect.top };
-      const constrainedPosition = constrainToViewport(draggedPosition, dimensions);
+      const constrainedPosition = constrainToViewport(
+        draggedPosition,
+        dimensions,
+      );
 
       setCurrentPosition(draggedPosition);
 

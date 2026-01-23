@@ -41,7 +41,6 @@ export function FeeSummaryCard({
   const cctpFee = estimate ? calculateCctpFee() : "0";
   const hasCctpFee = parseFloat(cctpFee) > 0;
 
-  // Don't show if no chains selected
   if (!fromChain || !toChain) return null;
 
   return (
@@ -122,7 +121,6 @@ export function FeeSummaryCard({
               </motion.div>
             );
           })}
-
         </div>
       )}
 
