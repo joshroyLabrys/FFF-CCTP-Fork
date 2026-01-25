@@ -8,7 +8,11 @@ import { WindowPortal } from "~/components/ui/window-portal";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import type { NotificationPanelViewProps } from "./notification-panel.types";
 
-export function NotificationPanelView({
+/**
+ * Inner content component for NotificationPanel.
+ * Exported separately for use in Storybook without WindowPortal.
+ */
+export function NotificationPanelContent({
   isOpen,
   panelRef,
   notifications,
@@ -17,8 +21,7 @@ export function NotificationPanelView({
   onClearAll,
 }: NotificationPanelViewProps) {
   return (
-    <WindowPortal>
-      <AnimatePresence>
+    <AnimatePresence>
         {isOpen && (
           <>
             {/* Backdrop */}
@@ -113,7 +116,17 @@ export function NotificationPanelView({
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+    </AnimatePresence>
+  );
+}
+
+/**
+ * NotificationPanel with WindowPortal wrapper for production use.
+ */
+export function NotificationPanelView(props: NotificationPanelViewProps) {
+  return (
+    <WindowPortal>
+      <NotificationPanelContent {...props} />
     </WindowPortal>
   );
 }
