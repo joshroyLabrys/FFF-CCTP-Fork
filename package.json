@@ -18,6 +18,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
+    "pretest": "playwright install --with-deps chromium",
     "knip": "knip",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
