@@ -1,6 +1,6 @@
 # Purpose
 
-<!-- A link to a Shortcut/Jira card should be included.
+<!-- A link to a Shortcut/Jira/Issue card/number should be included if applicable.
 
 Any other context required for the pull request that isn't already in the ticket (one or two sentences). -->
 
