@@ -71,6 +71,11 @@ export class BridgeEventManager {
 
     // Setup event listener scoped to this specific transaction
     const handler = (event: BridgeKitEventHandler) => {
+      // Guard: ignore stale events from disposed/replaced kits
+      // This prevents race conditions where events from a previous kit
+      // (after dispose/recreate) could update the wrong transaction
+      if (this.transactionKits.get(txId)?.kit !== kit) return;
+
       const normalizedEvent: NormalizedBridgeEvent = {
         method: event.method,
         values: event.values as NormalizedBridgeEvent["values"],
