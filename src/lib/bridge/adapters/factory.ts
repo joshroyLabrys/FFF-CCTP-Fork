@@ -15,9 +15,9 @@ import {
 } from "../networks";
 import { getViemChain } from "../chain-utils";
 
-// Solana RPC endpoints (from Circle's adapter defaults)
+// Solana RPC endpoints
 const SOLANA_RPC_ENDPOINTS = {
-  mainnet: "https://solana-mainnet.public.blastapi.io",
+  mainnet: "https://api.mainnet-beta.solana.com/",
   testnet: "https://api.devnet.solana.com",
 } as const;
 
@@ -275,6 +275,37 @@ export class AdapterFactory {
     this.adapterCache.set(cacheKey, adapter);
 
     return adapter;
+  }
+
+  /**
+   * Create a fresh adapter for a transaction (not cached)
+   * Use this for bridge/retry/resume operations to avoid concurrent transaction conflicts
+   * where multiple transactions sharing the same adapter can cause duplicate wallet popups
+   *
+   * @param wallet - The wallet to create an adapter for
+   * @param networkType - The network type (evm, solana, etc.)
+   * @param chainId - Optional chain ID for environment-specific RPC selection
+   */
+  async createTransactionAdapter(
+    wallet: IWallet,
+    networkType: NetworkType,
+    chainId?: SupportedChainId,
+  ): Promise<BridgeAdapter> {
+    // Get the appropriate creator
+    const creator = this.creators.get(networkType);
+    if (!creator) {
+      throw new Error(`No adapter creator registered for ${networkType}`);
+    }
+
+    // Verify wallet compatibility
+    if (!creator.canHandle(wallet)) {
+      throw new Error(
+        `Wallet ${wallet.connectorKey} is not compatible with ${networkType}`,
+      );
+    }
+
+    // Create fresh adapter without caching
+    return creator.createAdapter(wallet, chainId);
   }
 
   /**
