@@ -1555,7 +1555,11 @@ export class CCTPBridgeService implements IBridgeService {
       // This prevents losing progress when resuming and Bridge Kit returns steps as "pending"
       if (matchingStep.status === "completed" && resultStep.state !== "error") {
         // Preserve completed status, but still capture txHash if available
-        if ("txHash" in resultStep && resultStep.txHash && !matchingStep.txHash) {
+        if (
+          "txHash" in resultStep &&
+          resultStep.txHash &&
+          !matchingStep.txHash
+        ) {
           matchingStep.txHash = String(resultStep.txHash);
         }
         // Track state for attestation step logic
