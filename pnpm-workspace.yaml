@@ -14,8 +14,8 @@ overrides:
   diff@>=6.0.0 <8.0.3: '>=8.0.3'
 
 patchedDependencies:
-  '@circle-fin/bridge-kit': patches/@circle-fin__bridge-kit.patch
-  '@circle-fin/adapter-viem-v2': patches/@circle-fin__adapter-viem-v2.patch
   '@circle-fin/adapter-solana': patches/@circle-fin__adapter-solana.patch
+  '@circle-fin/adapter-viem-v2': patches/@circle-fin__adapter-viem-v2.patch
+  '@circle-fin/bridge-kit': patches/@circle-fin__bridge-kit.patch
 
 minimumReleaseAge: 2880 # in minutes (2 days)
