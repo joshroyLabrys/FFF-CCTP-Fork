@@ -89,12 +89,12 @@ describe("AdapterFactory", () => {
 
   describe("constructor", () => {
     it("should register EVM and Solana creators by default", () => {
-      expect(factory.supports("evm")).toBe(true);
-      expect(factory.supports("solana")).toBe(true);
+      expect(factory.getCreator("evm")).toBeDefined();
+      expect(factory.getCreator("solana")).toBeDefined();
     });
 
     it("should not support unregistered network types", () => {
-      expect(factory.supports("sui")).toBe(false);
+      expect(factory.getCreator("sui")).toBeUndefined();
     });
   });
 
@@ -108,7 +108,7 @@ describe("AdapterFactory", () => {
 
       factory.registerCreator(mockCreator);
 
-      expect(factory.supports("sui")).toBe(true);
+      expect(factory.getCreator("sui")).toBeDefined();
     });
 
     it("should overwrite existing creator with warning", () => {
@@ -290,15 +290,6 @@ describe("AdapterFactory", () => {
         "evm",
       );
       expect(wallet2.getEVMProvider).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("getSupportedNetworkTypes", () => {
-    it("should return all registered network types", () => {
-      const types = factory.getSupportedNetworkTypes();
-
-      expect(types).toContain("evm");
-      expect(types).toContain("solana");
     });
   });
 

@@ -34,9 +34,3 @@ export interface Notification {
   // Auto-dismiss after duration (ms), null = manual dismiss only
   autoDismissAfter?: number | null;
 }
-
-export interface NotificationAction {
-  type: "add" | "remove" | "markAsRead" | "markAllAsRead" | "clear";
-  notification?: Notification;
-  notificationId?: string;
-}

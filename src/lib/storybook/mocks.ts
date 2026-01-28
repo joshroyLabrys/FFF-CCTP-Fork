@@ -64,7 +64,7 @@ const createMockStep = (
   timestamp: Date.now(),
 });
 
-export const mockSteps = {
+const mockSteps = {
   pending: [
     createMockStep("approve", "pending"),
     createMockStep("burn", "pending"),
@@ -329,23 +329,4 @@ export const mockEstimates = {
     estimatedTime: 30000, // 30 seconds
     receiveAmount: "99.90",
   } as BridgeEstimate,
-};
-
-// ============================================================================
-// Mock Chain Data
-// ============================================================================
-
-export const mockChains = {
-  mainnet: [
-    { id: "Ethereum" as SupportedChainId, name: "Ethereum" },
-    { id: "Base" as SupportedChainId, name: "Base" },
-    { id: "Arbitrum" as SupportedChainId, name: "Arbitrum" },
-    { id: "Solana" as SupportedChainId, name: "Solana" },
-  ],
-  testnet: [
-    { id: "Ethereum_Sepolia" as SupportedChainId, name: "Ethereum Sepolia" },
-    { id: "Base_Sepolia" as SupportedChainId, name: "Base Sepolia" },
-    { id: "Arbitrum_Sepolia" as SupportedChainId, name: "Arbitrum Sepolia" },
-    { id: "Solana_Devnet" as SupportedChainId, name: "Solana Devnet" },
-  ],
 };

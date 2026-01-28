@@ -52,7 +52,6 @@ const createMockAdapterFactory = () => ({
   getCreator: vi.fn().mockReturnValue({
     canHandle: vi.fn().mockReturnValue(true),
   }),
-  supports: vi.fn().mockReturnValue(true),
 });
 
 // Create mock balance service
@@ -69,13 +68,7 @@ const createMockStorage = () => ({
   saveTransaction: vi.fn(),
   getTransaction: vi.fn(),
   getTransactionsByUser: vi.fn().mockResolvedValue([]),
-  getTransactionsByUserAndStatus: vi.fn().mockResolvedValue([]),
-  getRecentTransactions: vi.fn().mockResolvedValue([]),
-  updateTransactionStatus: vi.fn(),
-  updateTransactionStep: vi.fn(),
-  deleteTransaction: vi.fn(),
   clearUserTransactions: vi.fn(),
-  getRetryableTransactions: vi.fn().mockResolvedValue([]),
 });
 
 // Create mock wallet
@@ -452,37 +445,6 @@ describe("CCTPBridgeService", () => {
         "Ethereum",
         evmAddress,
       );
-    });
-  });
-
-  describe("supportsRoute", () => {
-    it("should return true for valid mainnet routes", async () => {
-      expect(await service.supportsRoute("Ethereum", "Base")).toBe(true);
-      expect(await service.supportsRoute("Ethereum", "Solana")).toBe(true);
-      expect(await service.supportsRoute("Base", "Arbitrum")).toBe(true);
-    });
-
-    it("should return true for valid testnet routes", async () => {
-      expect(
-        await service.supportsRoute("Ethereum_Sepolia", "Base_Sepolia"),
-      ).toBe(true);
-      expect(
-        await service.supportsRoute("Ethereum_Sepolia", "Solana_Devnet"),
-      ).toBe(true);
-    });
-
-    it("should return false for cross-environment routes", async () => {
-      expect(await service.supportsRoute("Ethereum", "Ethereum_Sepolia")).toBe(
-        false,
-      );
-      expect(await service.supportsRoute("Solana", "Solana_Devnet")).toBe(
-        false,
-      );
-    });
-
-    it("should return false for same chain routes", async () => {
-      expect(await service.supportsRoute("Ethereum", "Ethereum")).toBe(false);
-      expect(await service.supportsRoute("Solana", "Solana")).toBe(false);
     });
   });
 

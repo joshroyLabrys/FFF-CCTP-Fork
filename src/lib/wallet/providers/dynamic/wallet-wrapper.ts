@@ -228,13 +228,6 @@ export class DynamicWalletWrapper implements IWallet {
   }
 
   /**
-   * Check if the wallet is connected
-   */
-  isConnected(): boolean {
-    return !!this._dynamicWallet.address;
-  }
-
-  /**
    * Disconnect the wallet
    */
   async disconnect(): Promise<void> {
@@ -274,15 +267,4 @@ export function isDynamicWalletWrapper(
   wallet: IWallet,
 ): wallet is DynamicWalletWrapper {
   return wallet instanceof DynamicWalletWrapper;
-}
-
-/**
- * Get the underlying Dynamic wallet from an IWallet
- * Returns undefined if the wallet is not a Dynamic wallet
- */
-export function getDynamicWallet(wallet: IWallet): DynamicWallet | undefined {
-  if (isDynamicWalletWrapper(wallet)) {
-    return wallet.dynamicWallet;
-  }
-  return undefined;
 }

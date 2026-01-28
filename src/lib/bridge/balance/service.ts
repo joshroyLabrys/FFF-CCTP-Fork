@@ -154,44 +154,6 @@ export class BalanceService {
       return "0.00";
     }
   }
-
-  /**
-   * Batch fetch balances for multiple chains
-   */
-  async getBalances(
-    getAdapter: (chain: SupportedChainId) => Promise<BridgeAdapter>,
-    chains: SupportedChainId[],
-    walletAddress: string,
-  ): Promise<Record<SupportedChainId, TokenBalance>> {
-    const balancePromises = chains.map(async (chain) => {
-      try {
-        const adapter = await getAdapter(chain);
-        const balance = await this.getUSDCBalance(
-          adapter,
-          chain,
-          walletAddress,
-        );
-        return [chain, balance] as const;
-      } catch (error) {
-        console.error(`Failed to fetch balance for ${chain}:`, error);
-        return [
-          chain,
-          {
-            balance: "0",
-            formatted: "0.00",
-            decimals: 6,
-            symbol: "USDC",
-          },
-        ] as const;
-      }
-    });
-
-    const results = await Promise.all(balancePromises);
-    return Object.fromEntries(results) as Record<
-      SupportedChainId,
-      TokenBalance
-    >;
-  }
 }
 
 // Singleton instance

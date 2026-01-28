@@ -33,7 +33,7 @@ interface NotificationState {
   getNotificationById: (id: string) => Notification | undefined;
 }
 
-export const useNotificationStore = create<NotificationState>()((set, get) => ({
+const useNotificationStore = create<NotificationState>()((set, get) => ({
   notifications: [],
   isOpen: false,
   isLoaded: false,
@@ -57,6 +57,9 @@ export const useNotificationStore = create<NotificationState>()((set, get) => ({
     };
 
     await NotificationStorage.save(newNotification);
+
+    // Prune old notifications in background (keeps last 100)
+    void NotificationStorage.pruneOld(100);
 
     set((state) => ({
       notifications: [newNotification, ...state.notifications].slice(0, 20),
@@ -154,9 +157,6 @@ export const useUnreadCount = () =>
 
 export const useIsNotificationPanelOpen = () =>
   useNotificationStore((state) => state.isOpen);
-
-export const useNotificationsLoaded = () =>
-  useNotificationStore((state) => state.isLoaded);
 
 export const useLoadNotifications = () =>
   useNotificationStore((state) => state.loadNotifications);

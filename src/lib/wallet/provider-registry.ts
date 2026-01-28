@@ -27,24 +27,6 @@ export interface IWalletProviderAdapter {
    * @returns An IWallet instance wrapping the provider wallet
    */
   createWallet(providerWallet: unknown): IWallet;
-
-  /**
-   * Check if a provider wallet is an EVM wallet
-   * @param wallet - The provider-specific wallet to check
-   */
-  isEVMWallet(wallet: unknown): boolean;
-
-  /**
-   * Check if a provider wallet is a Solana wallet
-   * @param wallet - The provider-specific wallet to check
-   */
-  isSolanaWallet(wallet: unknown): boolean;
-
-  /**
-   * Check if a provider wallet is a SUI wallet
-   * @param wallet - The provider-specific wallet to check
-   */
-  isSuiWallet(wallet: unknown): boolean;
 }
 
 /**
@@ -103,20 +85,5 @@ export class WalletProviderRegistry {
    */
   static hasAdapter(): boolean {
     return this.adapter !== null;
-  }
-
-  /**
-   * Get the name of the registered provider
-   * @returns The provider name, or null if no adapter is registered
-   */
-  static getProviderName(): string | null {
-    return this.adapter?.providerName ?? null;
-  }
-
-  /**
-   * Clear the registered adapter (useful for testing)
-   */
-  static clear(): void {
-    this.adapter = null;
   }
 }

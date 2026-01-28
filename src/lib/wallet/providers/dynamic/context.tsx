@@ -154,20 +154,3 @@ export function useDynamicLinkWalletModal() {
 
   return { showLinkWalletModal };
 }
-
-/**
- * Hook to get raw Dynamic wallets (for cases where you need provider-specific access)
- * Use sparingly - prefer useWalletContext() for most cases
- */
-export function useRawDynamicWallets() {
-  const rawWallets = useUserWallets();
-  const { primaryWallet } = useDynamicContext();
-
-  return {
-    rawWallets,
-    primaryWallet,
-    ethereum: rawWallets.filter(isEthereumWallet),
-    solana: rawWallets.filter(isSolanaWallet),
-    sui: rawWallets.filter(isSuiWallet),
-  };
-}
