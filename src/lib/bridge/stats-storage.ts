@@ -120,13 +120,4 @@ export class StatsStorage {
 
     await this.save(stats);
   }
-
-  static async clear(
-    userAddress: string,
-    environment: NetworkEnvironment,
-  ): Promise<void> {
-    const db = await getDB();
-    const key = getStatsKey(userAddress, environment);
-    await db.delete("stats", key);
-  }
 }

@@ -10,7 +10,7 @@ import type { SupportedChainId } from "./networks";
  * Attestation time in seconds for each chain
  * Uses Fast Message times when available, falls back to Standard times
  */
-export const CCTP_ATTESTATION_TIMES: Record<SupportedChainId, number> = {
+const CCTP_ATTESTATION_TIMES: Record<SupportedChainId, number> = {
   // Mainnet - Fast Message Times (prioritized)
   Ethereum: 20, // ~20 seconds (Fast: 2 blocks)
   Arbitrum: 8, // ~8 seconds (Fast: 1 block)
@@ -32,24 +32,23 @@ export const CCTP_ATTESTATION_TIMES: Record<SupportedChainId, number> = {
  * Standard attestation times (fallback) in seconds
  * Used when Fast Message is not available
  */
-export const CCTP_STANDARD_ATTESTATION_TIMES: Record<SupportedChainId, number> =
-  {
-    // Mainnet - Standard Times
-    Ethereum: 13 * 60, // ~13 minutes (~65 blocks)
-    Arbitrum: 13 * 60, // ~13 minutes (~65 ETH blocks)
-    Base: 13 * 60, // ~13 minutes (~65 ETH blocks)
-    Monad: 5, // ~5 seconds (sub-second finality)
-    HyperEVM: 5, // ~5 seconds (sub-second finality)
-    Solana: 25, // ~25 seconds (32 blocks for finality)
+const CCTP_STANDARD_ATTESTATION_TIMES: Record<SupportedChainId, number> = {
+  // Mainnet - Standard Times
+  Ethereum: 13 * 60, // ~13 minutes (~65 blocks)
+  Arbitrum: 13 * 60, // ~13 minutes (~65 ETH blocks)
+  Base: 13 * 60, // ~13 minutes (~65 ETH blocks)
+  Monad: 5, // ~5 seconds (sub-second finality)
+  HyperEVM: 5, // ~5 seconds (sub-second finality)
+  Solana: 25, // ~25 seconds (32 blocks for finality)
 
-    // Testnet - Using same times as mainnet equivalents
-    Ethereum_Sepolia: 13 * 60, // ~13 minutes
-    Arbitrum_Sepolia: 13 * 60, // ~13 minutes
-    Base_Sepolia: 13 * 60, // ~13 minutes
-    Monad_Testnet: 5, // ~5 seconds (sub-second finality)
-    HyperEVM_Testnet: 5, // ~5 seconds (sub-second finality)
-    Solana_Devnet: 25, // ~25 seconds
-  };
+  // Testnet - Using same times as mainnet equivalents
+  Ethereum_Sepolia: 13 * 60, // ~13 minutes
+  Arbitrum_Sepolia: 13 * 60, // ~13 minutes
+  Base_Sepolia: 13 * 60, // ~13 minutes
+  Monad_Testnet: 5, // ~5 seconds (sub-second finality)
+  HyperEVM_Testnet: 5, // ~5 seconds (sub-second finality)
+  Solana_Devnet: 25, // ~25 seconds
+};
 
 /**
  * Get the estimated attestation time for a source chain

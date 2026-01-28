@@ -91,16 +91,6 @@ export class BridgeEventManager {
   }
 
   /**
-   * Get existing kit for a transaction (for checking if tracked)
-   *
-   * @param txId - Transaction ID to get kit for
-   * @returns The BridgeKit instance if tracked, undefined otherwise
-   */
-  getTransactionKit(txId: string): BridgeKit | undefined {
-    return this.transactionKits.get(txId)?.kit;
-  }
-
-  /**
    * Clean up kit when transaction completes.
    * Removes event listeners and deletes from tracking map.
    *

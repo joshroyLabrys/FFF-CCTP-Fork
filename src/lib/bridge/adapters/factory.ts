@@ -353,20 +353,6 @@ export class AdapterFactory {
   }
 
   /**
-   * Get all supported network types
-   */
-  getSupportedNetworkTypes(): NetworkType[] {
-    return Array.from(this.creators.keys());
-  }
-
-  /**
-   * Check if a network type is supported
-   */
-  supports(networkType: NetworkType): boolean {
-    return this.creators.has(networkType);
-  }
-
-  /**
    * Get creator for a network type
    */
   getCreator(networkType: NetworkType): IAdapterCreator | undefined {

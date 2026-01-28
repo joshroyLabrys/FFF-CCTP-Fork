@@ -255,49 +255,6 @@ export class CCTPBridgeService implements IBridgeService {
   }
 
   /**
-   * Get adapter for a specific chain using an explicit wallet
-   * This allows passing a specific wallet rather than auto-finding one
-   */
-  private async getAdapterForChainWithWallet(
-    chain: SupportedChainId,
-    wallet?: IWallet,
-  ): Promise<BridgeAdapter> {
-    const network = NETWORK_CONFIGS[chain];
-    if (!network) {
-      throw new Error(`Invalid chain: ${chain}`);
-    }
-
-    // Use provided wallet or find a compatible one
-    const targetWallet =
-      wallet ??
-      this.wallets.find((w) => {
-        try {
-          const creator = this.adapterFactory.getCreator(network.type);
-          return creator?.canHandle(w) ?? false;
-        } catch {
-          return false;
-        }
-      });
-
-    if (!targetWallet) {
-      throw new Error(
-        `No compatible wallet for ${network.type} network. Please connect a ${network.type.toUpperCase()} wallet first.`,
-      );
-    }
-
-    try {
-      return await this.adapterFactory.getAdapter(
-        targetWallet,
-        network.type,
-        chain,
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to get adapter for ${chain}: ${message}`);
-    }
-  }
-
-  /**
    * Get a fresh (uncached) adapter for a specific chain
    * Use this for bridge/retry/resume operations to avoid concurrent transaction conflicts
    * where multiple transactions sharing the same adapter can cause duplicate wallet popups
@@ -1288,20 +1245,6 @@ export class CCTPBridgeService implements IBridgeService {
     }
 
     return this.storage.getTransactionsByUser(this.userAddress);
-  }
-
-  /**
-   * Check if a route is supported
-   */
-  async supportsRoute(
-    from: SupportedChainId,
-    to: SupportedChainId,
-  ): Promise<boolean> {
-    try {
-      return isRouteSupported(from, to);
-    } catch {
-      return false;
-    }
   }
 
   /**
