@@ -361,21 +361,4 @@ describe("BridgeEventManager", () => {
       expect(callback).not.toHaveBeenCalled();
     });
   });
-
-  describe("getTransactionKit", () => {
-    it("should return kit for tracked transaction", () => {
-      const callback = vi.fn();
-
-      const kit = eventManager.createTransactionKit("tx-123", callback);
-      const retrievedKit = eventManager.getTransactionKit("tx-123");
-
-      expect(retrievedKit).toBe(kit);
-    });
-
-    it("should return undefined for untracked transaction", () => {
-      const kit = eventManager.getTransactionKit("non-existent");
-
-      expect(kit).toBeUndefined();
-    });
-  });
 });

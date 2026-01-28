@@ -1,4 +1,3 @@
-import type { AdapterContext, ChainDefinition } from "@circle-fin/bridge-kit";
 import type { SupportedChainId } from "./networks";
 import type { IWallet } from "~/lib/wallet/types";
 
@@ -185,23 +184,7 @@ export interface IBridgeService {
    * Get all transactions for current user
    */
   getTransactions(): Promise<BridgeTransaction[]>;
-
-  /**
-   * Check if a route is supported
-   */
-  supportsRoute(
-    from: SupportedChainId,
-    to: SupportedChainId,
-    token?: string,
-  ): Promise<boolean>;
 }
-
-export interface AdapterCapabilities {
-  addressContext: "user-controlled" | "developer-controlled";
-  supportedChains: ChainDefinition[];
-}
-
-export type Adapter = AdapterContext<AdapterCapabilities>["adapter"];
 
 /**
  * Wallet option for UI selection dropdowns

@@ -77,11 +77,6 @@ export interface IWallet {
   addChain?(chain: Chain): Promise<void>;
 
   /**
-   * Check if the wallet is currently connected
-   */
-  isConnected(): boolean;
-
-  /**
    * Disconnect the wallet
    */
   disconnect(): Promise<void>;

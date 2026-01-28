@@ -2,11 +2,8 @@
  * Window position utilities for draggable windows
  */
 
-/** Height of the navbar in pixels (h-12 = 48px) */
-export const NAVBAR_HEIGHT = 48;
-
 /** Safe zone below navbar - windows cannot be dragged above this Y position */
-export const NAVBAR_SAFE_ZONE = 60; // 48px navbar + 12px buffer
+const NAVBAR_SAFE_ZONE = 60; // 48px navbar + 12px buffer
 
 export interface WindowDimensions {
   width: number;
@@ -76,7 +73,7 @@ export function constrainToViewport(
  * @param padding - Optional padding from viewport edges (default: 20)
  * @returns true if minimum visible portion of window is within viewport
  */
-export function isWithinViewport(
+function isWithinViewport(
   position: WindowPosition | null | undefined,
   dimensions: WindowDimensions,
   padding = 20,

@@ -369,26 +369,6 @@ export function useWalletBalance(chainId: SupportedChainId | null) {
 }
 
 /**
- * Hook for transaction history
- */
-export function useTransactionHistory() {
-  const transactions = useBridgeStore((state) => state.transactions);
-  const loadTransactions = useBridgeStore((state) => state.loadTransactions);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await loadTransactions();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadTransactions]);
-
-  return { transactions, isLoading, refresh };
-}
-
-/**
  * Hook for paginated transaction history using useInfiniteQuery
  * Used by the transaction history UI for infinite scroll
  */
