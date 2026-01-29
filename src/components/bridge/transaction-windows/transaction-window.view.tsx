@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   CheckCircle2,
   AlertCircle,
@@ -322,15 +323,7 @@ export function TransactionWindowView({
                             Please wait while we process your transfer
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={onDismiss}
-                          className="h-7 gap-1 rounded-full bg-gray-100 px-2.5 text-[10px] font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                          <X className="size-3" />
-                          Dismiss
-                        </Button>
+                        <ConfirmDismissButton onDismiss={onDismiss} />
                       </>
                     )}
                     {isCancelled && (
@@ -472,5 +465,74 @@ export function TransactionWindowView({
         </motion.div>
       </div>
     </motion.div>
+  );
+}
+
+const DISMISS_ARM_TIMEOUT_MS = 3000;
+
+function ConfirmDismissButton({ onDismiss }: { onDismiss: () => void }) {
+  const [isArmed, setIsArmed] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => clearTimer(), [clearTimer]);
+
+  const handleClick = useCallback(() => {
+    if (isArmed) {
+      clearTimer();
+      onDismiss();
+      return;
+    }
+    setIsArmed(true);
+    timerRef.current = setTimeout(
+      () => setIsArmed(false),
+      DISMISS_ARM_TIMEOUT_MS,
+    );
+  }, [isArmed, onDismiss, clearTimer]);
+
+  return (
+    <motion.button
+      layout
+      onClick={handleClick}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className={cn(
+        "flex h-7 items-center gap-1 rounded-full px-2.5 text-[10px] font-semibold transition-colors hover:cursor-pointer",
+        isArmed
+          ? "bg-red-500/10 text-red-500"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-700",
+      )}
+    >
+      <X className="size-3" />
+      <AnimatePresence mode="wait" initial={false}>
+        {isArmed ? (
+          <motion.span
+            key="confirm"
+            className="whitespace-nowrap"
+            initial={{ opacity: 0, filter: "blur(4px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(4px)" }}
+            transition={{ duration: 0.15 }}
+          >
+            Click again to dismiss
+          </motion.span>
+        ) : (
+          <motion.span
+            key="dismiss"
+            initial={{ opacity: 0, filter: "blur(4px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, filter: "blur(4px)" }}
+            transition={{ duration: 0.15 }}
+          >
+            Dismiss
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }
