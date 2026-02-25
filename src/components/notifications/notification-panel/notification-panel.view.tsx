@@ -48,17 +48,17 @@ export function NotificationPanelContent({
             className="fixed top-14 right-4 hidden w-full max-w-md lg:block"
             style={{ zIndex: 200 }}
           >
-            {/* Theme-aware glassmorphic container */}
-            <div className="border-border/50 bg-card/95 overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
+            {/* Notification panel container */}
+            <div className="border-border bg-white/95 dark:bg-[#1c1c1e]/95 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl">
               {/* Header */}
-              <div className="border-border/30 bg-muted/40 border-b px-4 py-3">
+              <div className="border-border border-b bg-black/[0.02] px-4 py-3 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-foreground text-sm font-medium">
+                    <h3 className="text-[13px] font-semibold text-foreground">
                       Notifications
                     </h3>
                     {notifications.length > 0 && (
-                      <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-[10px] font-semibold">
+                      <span className="rounded-full bg-[#0071e3] px-2 py-0.5 text-[10px] font-semibold text-white">
                         {notifications.length}
                       </span>
                     )}
@@ -70,7 +70,7 @@ export function NotificationPanelContent({
                       variant="ghost"
                       size="sm"
                       onClick={onClearAll}
-                      className="text-muted-foreground hover:bg-muted/50 hover:text-foreground h-7 gap-1.5 px-2 text-xs font-medium"
+                      className="h-7 gap-1.5 px-2 text-[12px] font-medium text-muted-foreground hover:text-foreground"
                     >
                       Clear all
                     </Button>

@@ -13,7 +13,7 @@ export default function Home() {
         <div className="relative z-10 flex min-h-screen flex-col">
           <BridgeHeader />
 
-          <div className="flex flex-1 flex-col items-center justify-center gap-12 py-12">
+          <div className="flex flex-1 flex-col items-center justify-center gap-12 py-8">
             <BridgeCard />
           </div>
         </div>

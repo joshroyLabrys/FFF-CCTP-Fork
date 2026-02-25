@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "~/lib/utils";
 import { ScrollArea } from "~/components/ui/scroll-area";
@@ -11,6 +11,17 @@ import {
   useEnvironment,
   type SupportedChainId,
 } from "~/lib/bridge";
+import {
+  NetworkEthereum,
+  NetworkArbitrumOne,
+  NetworkBase,
+  NetworkSolana,
+  NetworkMonad,
+  NetworkHyperEvm,
+  NetworkBaseSepolia,
+  NetworkArbitrumSepolia,
+  NetworkMonadTestnet,
+} from "@web3icons/react";
 
 interface ChainSelectorProps {
   selectedChain: SupportedChainId | null;
@@ -18,6 +29,42 @@ interface ChainSelectorProps {
   label: string;
   excludeChainId?: SupportedChainId | null;
   containerRef?: React.RefObject<HTMLDivElement | null>;
+}
+
+function ChainIcon({
+  chainId,
+  size = 24,
+}: {
+  chainId: SupportedChainId;
+  size?: number;
+}) {
+  const props = { size, variant: "branded" as const };
+
+  switch (chainId) {
+    case "Ethereum":
+    case "Ethereum_Sepolia":
+      return <NetworkEthereum {...props} />;
+    case "Base":
+      return <NetworkBase {...props} />;
+    case "Base_Sepolia":
+      return <NetworkBaseSepolia {...props} />;
+    case "Arbitrum":
+      return <NetworkArbitrumOne {...props} />;
+    case "Arbitrum_Sepolia":
+      return <NetworkArbitrumSepolia {...props} />;
+    case "Solana":
+    case "Solana_Devnet":
+      return <NetworkSolana {...props} />;
+    case "Monad":
+      return <NetworkMonad {...props} />;
+    case "Monad_Testnet":
+      return <NetworkMonadTestnet {...props} />;
+    case "HyperEVM":
+    case "HyperEVM_Testnet":
+      return <NetworkHyperEvm {...props} />;
+    default:
+      return null;
+  }
 }
 
 export function ChainSelector({
@@ -46,14 +93,8 @@ export function ChainSelector({
 
     const dropdownRect = dropdownRef.current.getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
-
-    // Calculate available space from dropdown top to container bottom
-    // Subtract padding (16px) to keep some space from the edge
     const availableSpace = containerRect.bottom - dropdownRect.top - 16;
-
-    // Only set max-height if content would overflow
-    // Each network item is roughly 64px (p-3 + icon + text)
-    const estimatedContentHeight = availableChains.length * 64 + 16; // +16 for padding
+    const estimatedContentHeight = availableChains.length * 56 + 16;
 
     if (estimatedContentHeight > availableSpace && availableSpace > 100) {
       setMaxHeight(availableSpace);
@@ -64,63 +105,86 @@ export function ChainSelector({
 
   useEffect(() => {
     if (isOpen) {
-      // Small delay to ensure dropdown is rendered
       requestAnimationFrame(() => {
         calculateMaxHeight();
       });
     }
   }, [isOpen, calculateMaxHeight]);
 
+  const chainList = (
+    <div className="space-y-0.5 p-1.5">
+      {availableChains.map((chain) => (
+        <button
+          key={chain.id}
+          onClick={() => {
+            onSelectChain(chain.id);
+            setIsOpen(false);
+          }}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-colors",
+            "hover:bg-black/[0.04] dark:hover:bg-white/[0.06]",
+            selectedChain === chain.id &&
+              "bg-black/[0.03] dark:bg-white/[0.05]",
+          )}
+        >
+          <div className="size-8 shrink-0 overflow-hidden rounded-full">
+            <ChainIcon chainId={chain.id} size={32} />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-foreground text-[14px] font-medium">
+              {chain.displayName}
+            </div>
+            <div className="text-muted-foreground text-[12px]">USDC</div>
+          </div>
+          {selectedChain === chain.id && (
+            <Check className="size-3.5 text-[#0071e3]" />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="relative">
-      <label className="text-muted-foreground mb-2 block text-sm font-medium">
+      <label className="text-muted-foreground mb-1.5 block text-[11px] font-semibold uppercase tracking-wider">
         {label}
       </label>
-      <motion.button
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "group border-border/50 bg-card/50 relative w-full overflow-hidden rounded-2xl border backdrop-blur-xl transition-all",
-          "hover:border-border hover:bg-card/80",
-          "focus:ring-ring/20 focus:ring-2 focus:outline-none",
+          "w-full overflow-hidden rounded-xl transition-all",
+          "bg-black/[0.03] dark:bg-white/[0.05]",
+          "hover:bg-black/[0.05] dark:hover:bg-white/[0.08]",
+          "focus:ring-0 focus:outline-none",
+          isOpen && "bg-black/[0.05] dark:bg-white/[0.08]",
         )}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
       >
-        <div className="flex items-center gap-3 p-4">
+        <div className="flex items-center gap-3 px-4 py-3">
           {selected ? (
             <>
-              <motion.div
-                className={cn(
-                  "flex size-10 items-center justify-center rounded-xl bg-gradient-to-br text-xl font-bold",
-                  selected.color,
-                )}
-                whileHover={{ rotate: 5 }}
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-              >
-                {selected.icon}
-              </motion.div>
+              <div className="size-8 shrink-0 overflow-hidden rounded-full">
+                <ChainIcon chainId={selected.id} size={32} />
+              </div>
               <div className="flex-1 text-left">
-                <div className="text-foreground text-sm font-medium">
+                <div className="text-foreground text-[15px] font-medium">
                   {selected.displayName}
                 </div>
-                <div className="text-muted-foreground text-xs">
-                  USDC on {selected.name}
-                </div>
+                <div className="text-muted-foreground text-[12px]">USDC</div>
               </div>
             </>
           ) : (
-            <div className="text-muted-foreground flex-1 text-left text-sm">
+            <span className="text-muted-foreground flex-1 text-left text-[15px]">
               Select network
-            </div>
+            </span>
           )}
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
           >
-            <ChevronDown className="text-muted-foreground size-5" />
+            <ChevronDown className="text-muted-foreground size-4" />
           </motion.div>
         </div>
-      </motion.button>
+      </button>
 
       {isOpen && (
         <>
@@ -133,92 +197,19 @@ export function ChainSelector({
           />
           <motion.div
             ref={dropdownRef}
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="border-border/50 bg-card/95 absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl"
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className={cn(
+              "border-border bg-white dark:bg-[#1c1c1e]",
+              "absolute top-full right-0 left-0 z-50 mt-1.5 overflow-hidden rounded-2xl border shadow-2xl",
+            )}
           >
             {maxHeight ? (
-              <ScrollArea style={{ maxHeight }}>
-                <div className="space-y-1 p-2">
-                  {availableChains.map((chain, index) => (
-                    <motion.button
-                      key={chain.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => {
-                        onSelectChain(chain.id);
-                        setIsOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-xl p-3 transition-all",
-                        "hover:bg-accent/50",
-                        selectedChain === chain.id && "bg-accent/30",
-                      )}
-                      whileHover={{ x: 4 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <div
-                        className={cn(
-                          "flex size-10 items-center justify-center rounded-xl bg-gradient-to-br text-xl font-bold",
-                          chain.color,
-                        )}
-                      >
-                        {chain.icon}
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-foreground text-sm font-medium">
-                          {chain.displayName}
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                          USDC on {chain.name}
-                        </div>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </ScrollArea>
+              <ScrollArea style={{ maxHeight }}>{chainList}</ScrollArea>
             ) : (
-              <div className="space-y-1 p-2">
-                {availableChains.map((chain, index) => (
-                  <motion.button
-                    key={chain.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => {
-                      onSelectChain(chain.id);
-                      setIsOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-xl p-3 transition-all",
-                      "hover:bg-accent/50",
-                      selectedChain === chain.id && "bg-accent/30",
-                    )}
-                    whileHover={{ x: 4 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div
-                      className={cn(
-                        "flex size-10 items-center justify-center rounded-xl bg-gradient-to-br text-xl font-bold",
-                        chain.color,
-                      )}
-                    >
-                      {chain.icon}
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-foreground text-sm font-medium">
-                        {chain.displayName}
-                      </div>
-                      <div className="text-muted-foreground text-xs">
-                        USDC on {chain.name}
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
+              chainList
             )}
           </motion.div>
         </>

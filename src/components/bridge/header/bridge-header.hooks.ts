@@ -16,10 +16,11 @@ export function useHeaderState() {
   const environment = useEnvironment();
   const headerControlOrder = useHeaderControlOrder();
   const setHeaderControlOrder = useSetHeaderControlOrder();
-  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+
+  // Unified history + stats drawer
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showPongGame, setShowPongGame] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [isDraggingControls, setIsDraggingControls] = useState(false);
 
@@ -49,8 +50,17 @@ export function useHeaderState() {
     walletContext.hideWalletManager();
   }, [walletContext]);
 
-  const handleToggleTransactionHistory = useCallback(() => {
-    setShowTransactionHistory((prev) => !prev);
+  // History drawer — both transaction history and stats route here
+  const handleOpenHistoryDrawer = useCallback(() => {
+    setShowHistoryDrawer(true);
+  }, []);
+
+  const handleCloseHistoryDrawer = useCallback(() => {
+    setShowHistoryDrawer(false);
+  }, []);
+
+  const handleToggleHistoryDrawer = useCallback(() => {
+    setShowHistoryDrawer((prev) => !prev);
   }, []);
 
   const handleToggleDisclaimer = useCallback(() => {
@@ -61,14 +71,6 @@ export function useHeaderState() {
     setShowPongGame((prev) => !prev);
   }, []);
 
-  const handleToggleStats = useCallback(() => {
-    setShowStats((prev) => !prev);
-  }, []);
-
-  const handleCloseTransactionHistory = useCallback(() => {
-    setShowTransactionHistory(false);
-  }, []);
-
   const handleCloseDisclaimer = useCallback(() => {
     setShowDisclaimer(false);
   }, []);
@@ -77,24 +79,12 @@ export function useHeaderState() {
     setShowPongGame(false);
   }, []);
 
-  const handleCloseStats = useCallback(() => {
-    setShowStats(false);
-  }, []);
-
-  const handleOpenTransactionHistory = useCallback(() => {
-    setShowTransactionHistory(true);
-  }, []);
-
   const handleOpenDisclaimer = useCallback(() => {
     setShowDisclaimer(true);
   }, []);
 
   const handleOpenPongGame = useCallback(() => {
     setShowPongGame(true);
-  }, []);
-
-  const handleOpenStats = useCallback(() => {
-    setShowStats(true);
   }, []);
 
   const handleOpenCommandPalette = useCallback(() => {
@@ -121,10 +111,12 @@ export function useHeaderState() {
     showDynamicUserProfile: isWalletManagerOpen,
 
     // Panel visibility
-    showTransactionHistory,
+    // Both showTransactionHistory and showStats alias to the unified drawer
+    showHistoryDrawer,
+    showTransactionHistory: showHistoryDrawer,
+    showStats: showHistoryDrawer,
     showDisclaimer,
     showPongGame,
-    showStats,
     showExplainer,
     commandPaletteOpen,
 
@@ -143,19 +135,28 @@ export function useHeaderState() {
     onManageWallets: handleManageWallets,
     onLogout: handleLogout,
     onCloseDynamicProfile: handleCloseDynamicProfile,
-    onToggleTransactionHistory: handleToggleTransactionHistory,
+
+    // History drawer — both history and stats route here
+    onOpenHistoryDrawer: handleOpenHistoryDrawer,
+    onCloseHistoryDrawer: handleCloseHistoryDrawer,
+    onToggleHistoryDrawer: handleToggleHistoryDrawer,
+
+    // Aliases kept for nav-menu and header-controls compatibility
+    onToggleTransactionHistory: handleToggleHistoryDrawer,
+    onToggleStats: handleToggleHistoryDrawer,
+    onCloseTransactionHistory: handleCloseHistoryDrawer,
+    onCloseStats: handleCloseHistoryDrawer,
+    onOpenTransactionHistory: handleOpenHistoryDrawer,
+    onOpenStats: handleOpenHistoryDrawer,
+
+    // Other panels
     onToggleDisclaimer: handleToggleDisclaimer,
     onTogglePongGame: handleTogglePongGame,
-    onToggleStats: handleToggleStats,
-    onCloseTransactionHistory: handleCloseTransactionHistory,
     onCloseDisclaimer: handleCloseDisclaimer,
     onClosePongGame: handleClosePongGame,
-    onCloseStats: handleCloseStats,
     onCloseExplainer: handleCloseExplainer,
-    onOpenTransactionHistory: handleOpenTransactionHistory,
     onOpenDisclaimer: handleOpenDisclaimer,
     onOpenPongGame: handleOpenPongGame,
-    onOpenStats: handleOpenStats,
     onOpenExplainer: handleOpenExplainer,
     onOpenCommandPalette: handleOpenCommandPalette,
     onCloseCommandPalette: handleCloseCommandPalette,

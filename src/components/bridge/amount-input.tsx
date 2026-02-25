@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { DollarSign } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { cn } from "~/lib/utils";
 
 interface AmountInputProps {
@@ -11,76 +11,151 @@ interface AmountInputProps {
   label: string;
 }
 
+function formatWithCommas(raw: string): string {
+  if (!raw || raw === "") return "";
+  const num = parseFloat(raw);
+  if (isNaN(num)) return raw;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  }).format(num);
+}
+
+function formatBalance(balance: string): string {
+  const num = parseFloat(balance);
+  if (isNaN(num)) return balance;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
 export function AmountInput({
   value,
   onChange,
   balance = "0.00",
   label,
 }: AmountInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
+  const displayValue = isFocused
+    ? value
+    : value
+      ? formatWithCommas(value)
+      : "";
+
+  const hasValue = value && parseFloat(value) > 0;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Strip commas when user types (in case they paste a formatted number)
+    const raw = e.target.value.replace(/,/g, "");
+    if (raw === "" || /^\d*\.?\d*$/.test(raw)) {
+      onChange(raw);
+    }
+  };
+
+  const handleFocus = () => setIsFocused(true);
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    // Normalize to 2 decimal places on blur for USDC
+    if (value && !isNaN(parseFloat(value))) {
+      const normalized = parseFloat(value).toFixed(2);
+      // Only update if it meaningfully changes (avoid "0.00" replacing "")
+      if (parseFloat(normalized) > 0) {
+        onChange(normalized);
+      } else {
+        onChange("");
+      }
+    }
+  };
+
   const handleMaxClick = () => {
     onChange(balance);
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="text-muted-foreground text-sm font-medium">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </label>
-        <motion.button
+        <button
           onClick={handleMaxClick}
-          className="text-primary hover:text-primary/80 text-xs font-medium"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+          tabIndex={-1}
         >
-          Balance: {balance} USDC
-        </motion.button>
+          Balance:{" "}
+          <span className="font-medium">{formatBalance(balance)} USDC</span>
+        </button>
       </div>
-      <motion.div
+
+      <div
         className={cn(
-          "group border-border/50 bg-card/50 relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all",
-          "hover:border-border hover:bg-card/80",
-          "focus-within:border-ring/50 focus-within:ring-ring/20 focus-within:ring-2",
+          "rounded-xl bg-black/[0.03] dark:bg-white/[0.05] transition-all duration-150",
+          isFocused
+            ? "ring-1 ring-[#0071e3]/40"
+            : "ring-0",
         )}
-        whileHover={{ scale: 1.005 }}
       >
-        <div className="flex items-center gap-3 p-4">
-          <div className="bg-primary/10 flex size-10 items-center justify-center rounded-xl">
-            <DollarSign className="text-primary size-5" />
-          </div>
+        {/* Main input row */}
+        <div className="flex items-center gap-1.5 px-4 pb-2.5 pt-3">
+          {/* Dollar prefix — always visible */}
+          <span
+            className={cn(
+              "shrink-0 text-[32px] font-semibold tracking-tight transition-colors duration-150 select-none",
+              hasValue || isFocused
+                ? "text-foreground"
+                : "text-muted-foreground/30",
+            )}
+          >
+            $
+          </span>
+
           <input
             type="text"
-            value={value}
-            onChange={(e) => {
-              const val = e.target.value;
-              // Only allow numbers and one decimal point
-              if (val === "" || /^\d*\.?\d*$/.test(val)) {
-                onChange(val);
-              }
-            }}
-            placeholder="0.00"
+            inputMode="decimal"
+            value={displayValue}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder="0"
             className={cn(
-              "text-foreground placeholder:text-muted-foreground/30 flex-1 bg-transparent text-2xl font-semibold outline-none",
+              "flex-1 bg-transparent text-[32px] font-semibold tracking-tight outline-none",
+              "placeholder:text-muted-foreground/20",
+              hasValue || isFocused ? "text-foreground" : "text-muted-foreground/30",
             )}
           />
-          <motion.button
+
+          <button
             onClick={handleMaxClick}
-            className={cn(
-              "bg-primary/10 text-primary rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
-              "hover:bg-primary/20",
-            )}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            tabIndex={-1}
+            className="shrink-0 text-[12px] font-semibold text-[#0071e3] transition-opacity hover:opacity-70"
           >
             MAX
-          </motion.button>
+          </button>
         </div>
-        <div className="border-border/30 border-t px-4 py-2">
-          <div className="text-muted-foreground text-xs">
-            ≈ ${value || "0.00"} USD
-          </div>
-        </div>
-      </motion.div>
+
+        {/* USD subtext row — animates in when there's a value */}
+        <AnimatePresence initial={false}>
+          {hasValue && (
+            <motion.div
+              key="usd-row"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-black/[0.04] px-4 py-2 dark:border-white/[0.04]">
+                <span className="text-[12px] text-muted-foreground">
+                  ≈ {formatWithCommas(value)} USDC
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

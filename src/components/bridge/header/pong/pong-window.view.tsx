@@ -47,21 +47,20 @@ export function PongWindowView({
         style={{ touchAction: "none", zIndex }}
         onPointerDown={onFocus}
       >
-        <div className="border-border/50 bg-card/95 overflow-hidden rounded-xl border shadow-2xl backdrop-blur-2xl">
+        <div className="border-border bg-white/95 dark:bg-[#1c1c1e]/95 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl">
           {/* Title bar */}
           <div
-            className="bg-muted/40 group border-border/30 flex cursor-grab items-center justify-between border-b px-3 py-2.5 active:cursor-grabbing"
+            className="border-border flex cursor-grab items-center justify-between border-b bg-black/[0.02] px-3.5 py-2.5 dark:bg-white/[0.03] active:cursor-grabbing"
             onPointerDown={(e) => dragControls.start(e)}
           >
             <div className="flex items-center gap-2">
               <motion.button
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onClose();
                 }}
-                className="group/btn relative size-3 rounded-full bg-red-500 transition-all hover:bg-red-600"
+                className="group/btn relative size-3 rounded-full bg-[#ff5f57] transition-opacity hover:opacity-80"
                 aria-label="Close window"
               >
                 <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-red-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
@@ -69,22 +68,21 @@ export function PongWindowView({
                 </span>
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   onMinimize();
                 }}
-                className="group/btn relative size-3 rounded-full bg-yellow-500 transition-all hover:bg-yellow-600"
+                className="group/btn relative size-3 rounded-full bg-[#febc2e] transition-opacity hover:opacity-80"
                 aria-label="Minimize window"
               >
                 <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-yellow-900 opacity-0 transition-opacity group-hover/btn:opacity-100">
                   −
                 </span>
               </motion.button>
-              <div className="size-3 rounded-full bg-gray-400" />
+              <div className="size-3 rounded-full bg-[#28c840]/40" />
             </div>
-            <div className="text-muted-foreground pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium">
+            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-medium text-muted-foreground">
               Pong
             </div>
             <div className="w-[52px]" />

@@ -5,10 +5,13 @@ export interface BridgeHeaderViewProps {
   showDynamicUserProfile: boolean;
 
   // Panel visibility
+  showHistoryDrawer: boolean;
+  /** @deprecated alias for showHistoryDrawer — kept for nav-menu/controls compat */
   showTransactionHistory: boolean;
+  /** @deprecated alias for showHistoryDrawer — kept for nav-menu/controls compat */
+  showStats: boolean;
   showDisclaimer: boolean;
   showPongGame: boolean;
-  showStats: boolean;
   showExplainer: boolean;
   commandPaletteOpen: boolean;
 
@@ -27,19 +30,28 @@ export interface BridgeHeaderViewProps {
   onManageWallets: () => void;
   onLogout: () => void;
   onCloseDynamicProfile: () => void;
+
+  // Unified history drawer
+  onOpenHistoryDrawer: () => void;
+  onCloseHistoryDrawer: () => void;
+  onToggleHistoryDrawer: () => void;
+
+  // Aliases kept for nav-menu and header-controls compat
   onToggleTransactionHistory: () => void;
-  onToggleDisclaimer: () => void;
-  onTogglePongGame: () => void;
   onToggleStats: () => void;
   onCloseTransactionHistory: () => void;
+  onCloseStats: () => void;
+  onOpenTransactionHistory: () => void;
+  onOpenStats: () => void;
+
+  // Other panels
+  onToggleDisclaimer: () => void;
+  onTogglePongGame: () => void;
   onCloseDisclaimer: () => void;
   onClosePongGame: () => void;
-  onCloseStats: () => void;
   onCloseExplainer: () => void;
-  onOpenTransactionHistory: () => void;
   onOpenDisclaimer: () => void;
   onOpenPongGame: () => void;
-  onOpenStats: () => void;
   onOpenExplainer: () => void;
   onOpenCommandPalette: () => void;
   onCloseCommandPalette: () => void;

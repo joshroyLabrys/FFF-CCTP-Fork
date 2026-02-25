@@ -69,17 +69,15 @@ export function HeaderControlEntry({
             control.onClick?.(viewProps);
           }
         }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileTap={{ scale: 0.94 }}
         className={cn(
-          "text-foreground relative h-7 w-7 rounded-md p-0 transition-colors",
-          "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-          "flex items-center justify-center",
+          "text-foreground relative flex size-8 items-center justify-center rounded-lg transition-colors",
+          "hover:bg-black/[0.05] dark:hover:bg-white/[0.07] focus:ring-0 focus:outline-none",
           visibilityClasses,
         )}
         aria-label={control.ariaLabel}
       >
-        <Icon className={cn("size-4", control.iconClassName)} />
+        <Icon className={cn("size-[18px]", control.iconClassName)} />
         {badge && (
           <kbd className="bg-muted/80 text-muted-foreground absolute -bottom-0.5 left-1/2 hidden -translate-x-1/2 rounded px-1 text-[8px] leading-tight font-medium sm:block">
             {badge}
@@ -151,51 +149,48 @@ function WalletButton({ viewProps }: { viewProps: BridgeHeaderViewProps }) {
         <motion.button
           ref={buttonRef}
           onClick={handleClick}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileTap={{ scale: 0.96 }}
           className={cn(
-            "text-foreground h-7 w-[90px] rounded-md px-1.5 transition-colors sm:h-8 sm:min-w-[100px] sm:px-2.5",
-            "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-            "flex items-center justify-center gap-1 sm:gap-1.5",
+            "text-foreground flex h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 transition-colors",
+            "hover:bg-black/[0.05] dark:hover:bg-white/[0.07] focus:ring-0 focus:outline-none",
           )}
         >
           <div className="size-1.5 rounded-full bg-green-500" />
-          <span className="text-[11px] font-medium sm:text-xs">
-            {walletAddress?.slice(0, 4)}...
-            {walletAddress?.slice(-3)}
+          <span className="text-[13px] font-medium">
+            {walletAddress?.slice(0, 4)}...{walletAddress?.slice(-4)}
           </span>
-          <ChevronDown className="size-2.5 sm:size-3" />
+          <ChevronDown className="size-3 opacity-60" />
         </motion.button>
 
         <AnimatePresence>
           {isOpen && (
             <motion.div
               ref={menuRef}
-              initial={{ opacity: 0, y: -5, scale: 0.95 }}
+              initial={{ opacity: 0, y: -4, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -5, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="border-border/50 bg-card/95 absolute top-full right-0 z-50 mt-4 w-48 rounded-md border p-1 shadow-lg backdrop-blur-xl"
+              exit={{ opacity: 0, y: -4, scale: 0.97 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="border-border bg-card absolute top-full right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border p-1 shadow-xl backdrop-blur-2xl"
             >
               <button
                 onClick={() => {
                   onManageWallets();
                   setIsOpen(false);
                 }}
-                className="text-foreground hover:bg-muted/50 flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm"
+                className="text-foreground hover:bg-black/[0.04] dark:hover:bg-white/[0.06] flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-[13px]"
               >
-                <User className="mr-2 size-3.5" />
+                <User className="mr-2.5 size-3.5 opacity-70" />
                 Manage Wallets
               </button>
-              <div className="bg-border/30 my-1 h-px" />
+              <div className="bg-border my-1 h-px" />
               <button
                 onClick={() => {
                   onLogout();
                   setIsOpen(false);
                 }}
-                className="hover:bg-muted/50 flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-red-600 dark:text-red-400"
+                className="flex w-full cursor-pointer items-center rounded-lg px-3 py-2 text-[13px] text-red-600 hover:bg-red-500/[0.06] dark:text-red-400"
               >
-                <LogOut className="mr-2 size-3.5" />
+                <LogOut className="mr-2.5 size-3.5" />
                 Disconnect
               </button>
             </motion.div>
@@ -212,16 +207,14 @@ function WalletButton({ viewProps }: { viewProps: BridgeHeaderViewProps }) {
           onConnectWallet();
         }
       }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.96 }}
       className={cn(
-        "text-foreground h-7 w-[90px] rounded-md px-1.5 transition-colors sm:h-8 sm:min-w-[100px] sm:px-2.5",
-        "hover:bg-muted/50 focus:ring-0 focus:outline-none",
-        "flex items-center justify-center gap-1 sm:gap-1.5",
+        "flex h-8 items-center justify-center gap-1.5 rounded-lg bg-[#0071e3] px-3.5 text-white transition-all",
+        "hover:brightness-90 focus:ring-0 focus:outline-none",
       )}
     >
-      <Wallet className="size-3 sm:size-3.5" />
-      <span className="text-[11px] font-medium sm:text-xs">Connect</span>
+      <Wallet className="size-3.5" />
+      <span className="text-[13px] font-semibold">Connect</span>
     </motion.button>
   );
 }

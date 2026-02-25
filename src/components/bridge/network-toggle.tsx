@@ -1,8 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
 import { useEnvironment, useSetEnvironment } from "~/lib/bridge";
-import { Circle } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 export function NetworkToggle() {
@@ -12,27 +10,24 @@ export function NetworkToggle() {
   const isMainnet = environment === "mainnet";
 
   return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={() => setEnvironment(isMainnet ? "testnet" : "mainnet")}
       className={cn(
-        "relative flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-all",
-        "hover:bg-muted/50",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all select-none",
+        "focus:ring-0 focus:outline-none",
+        isMainnet
+          ? "bg-green-500/10 text-green-700 hover:bg-green-500/15 dark:text-green-400"
+          : "bg-amber-500/10 text-amber-700 hover:bg-amber-500/15 dark:text-amber-400",
       )}
       aria-label={`Switch to ${isMainnet ? "testnet" : "mainnet"}`}
     >
-      <Circle
+      <span
         className={cn(
-          "size-2.5 transition-colors",
-          isMainnet
-            ? "fill-blue-500 text-blue-500"
-            : "fill-amber-500 text-amber-500",
+          "size-1.5 rounded-full",
+          isMainnet ? "bg-green-500" : "bg-amber-500",
         )}
       />
-      <span className="text-foreground">
-        {isMainnet ? "Mainnet" : "Testnet"}
-      </span>
-    </motion.button>
+      {isMainnet ? "Mainnet" : "Testnet"}
+    </button>
   );
 }

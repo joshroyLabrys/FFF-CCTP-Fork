@@ -14,19 +14,13 @@ export function NotificationItemView({
 }: NotificationItemViewProps) {
   return (
     <motion.div
-      whileHover={{ scale: 1.01, y: -2 }}
       whileTap={{ scale: 0.98 }}
-      transition={{
-        type: "spring",
-        damping: 20,
-        stiffness: 300,
-      }}
+      transition={{ duration: 0.1 }}
       onClick={onItemClick}
       className={cn(
-        "group border-border/30 relative cursor-pointer overflow-hidden rounded-xl border p-4 backdrop-blur-xl transition-all",
-        "hover:bg-muted/50 hover:border-border/50 hover:shadow-lg",
-        "bg-muted/20",
-        !notification.read && "ring-primary/30 shadow-md ring-2",
+        "group relative cursor-pointer overflow-hidden rounded-xl p-3.5 transition-colors",
+        "bg-black/[0.03] hover:bg-black/[0.05] dark:bg-white/[0.04] dark:hover:bg-white/[0.07]",
+        !notification.read && "ring-1 ring-[#0071e3]/20",
       )}
     >
       <div className="flex items-start gap-3">
@@ -35,71 +29,66 @@ export function NotificationItemView({
 
         {/* Content */}
         <div className="min-w-0 flex-1">
-          {/* Header with title and timestamp */}
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <p className="text-foreground text-sm leading-tight font-semibold">
+          {/* Title + timestamp */}
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <p className="text-[13px] font-semibold leading-tight text-foreground">
               {notification.title}
             </p>
             <div className="flex shrink-0 items-center gap-1.5">
-              {/* Timestamp badge */}
-              <span className="text-muted-foreground bg-muted/50 rounded-full px-2 py-0.5 text-[10px] font-medium">
+              <span className="text-[11px] text-muted-foreground">
                 {formattedTimestamp}
               </span>
-              {/* Dismiss button */}
               <button
                 onClick={onDismiss}
-                className="hover:bg-muted/50 rounded-full p-1 opacity-0 transition-all group-hover:opacity-100"
+                className="rounded-md p-0.5 opacity-0 transition-all hover:bg-black/[0.06] group-hover:opacity-100 dark:hover:bg-white/[0.08]"
                 aria-label="Dismiss notification"
               >
-                <X className="text-muted-foreground size-3.5" />
+                <X className="size-3 text-muted-foreground" />
               </button>
             </div>
           </div>
 
           {/* Message */}
-          <p className="text-muted-foreground mb-2 line-clamp-2 text-xs leading-relaxed">
+          <p className="mb-2 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
             {notification.message}
           </p>
 
-          {/* Bridge transaction details */}
+          {/* Bridge route chip */}
           {notification.fromChain && notification.toChain && (
-            <div className="bg-muted/50 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium">
-              <span className="text-foreground">{notification.fromChain}</span>
-              <ArrowRight className="text-muted-foreground size-3" />
-              <span className="text-foreground">{notification.toChain}</span>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-2.5 py-1 text-[11px] dark:bg-white/[0.06]">
+              <span className="font-medium text-foreground">{notification.fromChain}</span>
+              <ArrowRight className="size-2.5 text-muted-foreground" />
+              <span className="font-medium text-foreground">{notification.toChain}</span>
               {notification.amount && (
                 <>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-foreground font-semibold">
-                    {notification.amount} {notification.token || "USDC"}
+                  <span className="text-muted-foreground/60">·</span>
+                  <span className="font-semibold text-foreground">
+                    {notification.amount} {notification.token ?? "USDC"}
                   </span>
                 </>
               )}
             </div>
           )}
 
-          {/* Action button for non-bridge notifications */}
+          {/* Action button */}
           {notification.actionLabel && !notification.fromChain && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               className={cn(
-                "mt-2 rounded-full px-4 py-1.5 text-xs font-semibold backdrop-blur-xl transition-all",
-                "shadow-md active:shadow-sm",
+                "mt-2 rounded-lg px-3 py-1 text-[12px] font-semibold transition-all",
                 notification.status === "failed"
-                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-500/25 hover:from-red-600 hover:to-red-700"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90",
+                  ? "bg-red-500/10 text-red-600 hover:bg-red-500/15 dark:text-red-400"
+                  : "bg-[#0071e3]/10 text-[#0071e3] hover:bg-[#0071e3]/15",
               )}
             >
               {notification.actionLabel}
-            </motion.button>
+            </button>
           )}
         </div>
       </div>
 
-      {/* Unread indicator */}
+      {/* Unread dot */}
       {!notification.read && (
-        <div className="bg-primary absolute top-2 right-2 size-2 rounded-full" />
+        <div className="absolute top-3 right-3 size-1.5 rounded-full bg-[#0071e3]" />
       )}
     </motion.div>
   );

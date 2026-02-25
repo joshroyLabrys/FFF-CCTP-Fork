@@ -21,7 +21,6 @@ export function NotificationBell({ isDragging }: NotificationBellProps) {
   const isOpen = useIsNotificationPanelOpen();
   const loadNotifications = useLoadNotifications();
 
-  // Load notifications from IndexedDB on mount
   useEffect(() => {
     void loadNotifications();
   }, [loadNotifications]);
@@ -37,20 +36,17 @@ export function NotificationBell({ isDragging }: NotificationBellProps) {
       onClick={handleClick}
       data-notification-bell="true"
       className={cn(
-        "relative h-7 w-7 rounded-md p-0 transition-all",
-        "flex items-center justify-center",
-        "hover:bg-muted/50",
-        isOpen && "bg-muted/70",
+        "relative flex size-8 items-center justify-center rounded-lg transition-colors",
+        "hover:bg-black/[0.05] dark:hover:bg-white/[0.07]",
+        isOpen && "bg-black/[0.06] dark:bg-white/[0.09]",
       )}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.94 }}
       aria-label="Notifications"
     >
       <Bell
         className={cn(
-          "size-4 transition-colors",
-          isOpen ? "text-foreground" : "text-muted-foreground",
-          unreadCount > 0 && "text-blue-500",
+          "size-[18px] transition-colors",
+          isOpen || unreadCount > 0 ? "text-[#0071e3]" : "text-muted-foreground",
         )}
       />
 
@@ -61,28 +57,13 @@ export function NotificationBell({ isDragging }: NotificationBellProps) {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white shadow-lg"
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-[#0071e3] text-[9px] font-bold text-white"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Pulse animation for new notifications */}
-      {unreadCount > 0 && (
-        <motion.div
-          className="absolute inset-0 rounded-md bg-blue-500/20"
-          animate={{
-            opacity: [0.5, 0],
-            scale: [1, 1.5],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            repeatDelay: 1,
-          }}
-        />
-      )}
     </motion.button>
   );
 }

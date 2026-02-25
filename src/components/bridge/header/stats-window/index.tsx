@@ -1,14 +1,5 @@
 "use client";
 
-import { useStatsWindowState } from "./stats-window.hooks";
-import { StatsWindowView } from "./stats-window.view";
-import type { StatsWindowProps } from "./stats-window.types";
-
-export function StatsWindow(props: StatsWindowProps) {
-  const state = useStatsWindowState(props);
-
-  return <StatsWindowView {...state} />;
-}
-
-export { MobileStatsDrawer } from "./stats-drawer";
+// Stats data hook is consumed by HistoryDrawer — this module now only exports types and the hook.
+export { useStatsWindowState } from "./stats-window.hooks";
 export type { StatsWindowProps, BridgeStats } from "./stats-window.types";

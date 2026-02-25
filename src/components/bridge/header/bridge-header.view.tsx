@@ -9,16 +9,9 @@ import {
   MobileNotificationDrawer,
 } from "~/components/notifications";
 import { CommandPalette } from "~/components/ui/command-palette";
-import {
-  DraggableTransactionHistory,
-  MobileTransactionHistoryDrawer,
-} from "./transaction-history";
-import {
-  DraggableDisclaimerWindow,
-  MobileDisclaimerDrawer,
-} from "./disclaimer";
+import { HistoryDrawer } from "./history-drawer";
+import { DisclaimerModal } from "./disclaimer";
 import { DraggablePongWindow, MobilePongDrawer } from "./pong";
-import { StatsWindow, MobileStatsDrawer } from "./stats-window";
 import { CCTPExplainerView } from "../cctp-explainer";
 import { NavMenuEntry, NAV_MENU_CONFIG } from "./nav-menu";
 import {
@@ -32,10 +25,9 @@ import type { BridgeHeaderViewProps } from "./bridge-header.types";
 export function BridgeHeaderView(props: BridgeHeaderViewProps) {
   const {
     showDynamicUserProfile,
-    showTransactionHistory,
+    showHistoryDrawer,
     showDisclaimer,
     showPongGame,
-    showStats,
     showExplainer,
     commandPaletteOpen,
     headerControlOrder,
@@ -43,10 +35,9 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
     onDragStartControls,
     onDragEndControls,
     onCloseDynamicProfile,
-    onCloseTransactionHistory,
+    onCloseHistoryDrawer,
     onCloseDisclaimer,
     onClosePongGame,
-    onCloseStats,
     onCloseExplainer,
     onOpenTransactionHistory,
     onOpenDisclaimer,
@@ -57,7 +48,7 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
     onCloseCommandPalette,
   } = props;
 
-  // Filter controls for desktop reorder (exclude mobile-only items to fix invisible gap)
+  // Filter controls for desktop reorder (exclude mobile-only items)
   const desktopControls = useMemo(() => {
     return headerControlOrder.filter((id) => {
       const control = getHeaderControl(id);
@@ -68,11 +59,9 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
   // Handle reorder while preserving hidden items
   const handleDesktopReorder = useCallback(
     (newOrder: string[]) => {
-      // Get items that were filtered out (mobile-only)
       const hiddenItems = headerControlOrder.filter(
         (id) => !desktopControls.includes(id),
       );
-      // Append hidden items at the end to preserve them
       onReorderHeaderControls([...newOrder, ...hiddenItems]);
     },
     [headerControlOrder, desktopControls, onReorderHeaderControls],
@@ -87,25 +76,20 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="border-border/40 bg-card/70 fixed top-0 right-0 left-0 z-200 h-12 w-full border-b backdrop-blur-xl"
+        className="border-border fixed top-0 right-0 left-0 z-200 h-14 w-full border-b bg-white/80 backdrop-blur-2xl dark:bg-black/80"
       >
-        <div className="flex h-full items-center justify-between px-3 sm:px-6">
-          {/* Left section - Logo, app name, and menu */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <TokenUSDC
-              variant="mono"
-              size={20}
-              color="currentColor"
-              className="sm:h-6 sm:w-6"
-            />
+        <div className="flex h-full items-center justify-between px-4 sm:px-6">
+          {/* Left section */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <TokenUSDC variant="branded" size={22} className="shrink-0" />
 
-            <span className="text-foreground hidden text-xs font-semibold select-none sm:inline-block sm:text-sm">
+            <span className="text-foreground hidden text-[15px] font-semibold tracking-tight select-none sm:inline-block">
               CCTP Bridge
             </span>
 
-            <div className="bg-border/30 ml-1 hidden h-4 w-px sm:ml-2 sm:block" />
+            <div className="bg-border ml-1 hidden h-4 w-px sm:ml-2 sm:block" />
 
-            {/* Menu bar - Desktop only */}
+            {/* Menu bar — Desktop only */}
             <LayoutGroup>
               <div className="hidden lg:flex lg:items-center lg:gap-1">
                 {NAV_MENU_CONFIG.map((menu) => (
@@ -115,7 +99,7 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
             </LayoutGroup>
           </div>
 
-          {/* Right section - Controls */}
+          {/* Right section */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Desktop: Reorderable controls */}
             <Reorder.Group
@@ -156,13 +140,12 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
       </motion.header>
 
       {/* Spacer for fixed header */}
-      <div className="h-16" />
+      <div className="h-14" />
 
       {/* Dynamic User Profile Modal */}
       <AnimatePresence>
         {showDynamicUserProfile && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -171,8 +154,6 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
               className="fixed inset-0 z-300 bg-black/60 backdrop-blur-sm"
               onClick={onCloseDynamicProfile}
             />
-
-            {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -188,31 +169,15 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Transaction History Window - Desktop only */}
-      <AnimatePresence>
-        {showTransactionHistory && (
-          <>
-            <DraggableTransactionHistory onClose={onCloseTransactionHistory} />
-            <MobileTransactionHistoryDrawer
-              onClose={onCloseTransactionHistory}
-            />
-          </>
-        )}
-      </AnimatePresence>
+      {/* Unified History & Stats Drawer */}
+      <HistoryDrawer open={showHistoryDrawer} onClose={onCloseHistoryDrawer} />
 
-      {/* Notification Panel - Desktop dropdown, Mobile drawer */}
+      {/* Notification Panel */}
       <NotificationPanel />
       <MobileNotificationDrawer />
 
-      {/* Disclaimer Window */}
-      <AnimatePresence>
-        {showDisclaimer && (
-          <>
-            <DraggableDisclaimerWindow onClose={onCloseDisclaimer} />
-            <MobileDisclaimerDrawer onClose={onCloseDisclaimer} />
-          </>
-        )}
-      </AnimatePresence>
+      {/* Disclaimer Modal */}
+      <DisclaimerModal open={showDisclaimer} onClose={onCloseDisclaimer} />
 
       {/* Pong Game Window */}
       <AnimatePresence>
@@ -220,16 +185,6 @@ export function BridgeHeaderView(props: BridgeHeaderViewProps) {
           <>
             <DraggablePongWindow onClose={onClosePongGame} />
             <MobilePongDrawer onClose={onClosePongGame} />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Stats Window */}
-      <AnimatePresence>
-        {showStats && (
-          <>
-            <StatsWindow onClose={onCloseStats} />
-            <MobileStatsDrawer onClose={onCloseStats} />
           </>
         )}
       </AnimatePresence>
