@@ -16,6 +16,7 @@ import {
   useRetryBridge,
   useResumeBridge,
   useRecoverBridge,
+  useCheckXReserveStatus,
 } from "~/lib/bridge/hooks";
 import { useUpdateNotification, useNotifications } from "~/lib/notifications";
 import { parseTransactionError, useBridgeStore } from "~/lib/bridge";
@@ -51,10 +52,12 @@ export function useMultiWindowBridgeProgressState({
   const windowRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
 
-  // Retry, resume, and recover functionality
+  // Retry, resume, recover, and xReserve check-status functionality
   const { retryBridge, isRetrying } = useRetryBridge();
   const { resumeBridge, isResuming } = useResumeBridge();
   const { recoverBridge, isRecovering } = useRecoverBridge();
+  const { checkXReserveStatus, isChecking: isCheckingXReserve } =
+    useCheckXReserveStatus();
   const updateNotification = useUpdateNotification();
   const notifications = useNotifications();
   const setCurrentTransaction = useBridgeStore(
@@ -203,13 +206,14 @@ export function useMultiWindowBridgeProgressState({
     if (!notificationId) return;
 
     const fromNetwork = NETWORK_CONFIGS[transaction.fromChain];
-    const toNetwork = NETWORK_CONFIGS[transaction.toChain];
+    const toNetwork = transaction.toChain === "Canton" ? null : NETWORK_CONFIGS[transaction.toChain];
+    const toDisplayName = transaction.toChain === "Canton" ? "Canton (USDCx)" : (toNetwork?.displayName ?? "");
 
     if (transaction.status === "completed") {
       void updateNotificationRef.current(notificationId, {
         status: "success",
         title: "Bridge Completed",
-        message: `Successfully transferred ${transaction.amount} USDC from ${fromNetwork?.displayName} to ${toNetwork?.displayName}`,
+        message: `Successfully transferred ${transaction.amount} USDC from ${fromNetwork?.displayName} to ${toDisplayName}`,
         actionLabel: undefined,
         actionType: undefined,
       });
@@ -404,6 +408,15 @@ export function useMultiWindowBridgeProgressState({
   const isInProgress =
     transaction?.status === "pending" || transaction?.status === "bridging";
   const isCancelled = transaction?.status === "cancelled";
+  const isConfirmingXReserve =
+    transaction?.flow === "xreserve" &&
+    transaction?.toChain === "Canton" &&
+    transaction?.status === "confirming";
+
+  const handleCheckXReserveStatus = useCallback(() => {
+    if (!transaction?.id) return;
+    void checkXReserveStatus(transaction.id);
+  }, [transaction?.id, checkXReserveStatus]);
 
   return {
     windowRef,
@@ -422,9 +435,11 @@ export function useMultiWindowBridgeProgressState({
     isInProgress,
     isCancelled,
     fromNetworkDisplayName: fromNetwork?.displayName ?? "",
-    toNetworkDisplayName: toNetwork?.displayName ?? "",
+    toNetworkDisplayName:
+      transaction.toChain === "Canton" ? "Canton (USDCx)" : (toNetwork?.displayName ?? ""),
     fromNetworkExplorerUrl: fromNetwork?.explorerUrl ?? "",
-    toNetworkExplorerUrl: toNetwork?.explorerUrl ?? "",
+    toNetworkExplorerUrl:
+      transaction.toChain === "Canton" ? "" : (toNetwork?.explorerUrl ?? ""),
     onDragStart: handleDragStart,
     onDragEnd: handleDragEnd,
     onClose: handleClose,
@@ -435,6 +450,9 @@ export function useMultiWindowBridgeProgressState({
     onRetryStep: handleRetryStep,
     onDismiss: handleDismiss,
     dragControls,
+    isConfirmingXReserve,
+    onCheckXReserveStatus: handleCheckXReserveStatus,
+    isCheckingXReserve,
   };
 }
 

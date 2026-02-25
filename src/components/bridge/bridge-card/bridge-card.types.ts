@@ -3,7 +3,11 @@ import type {
   TransferMethod,
   WalletOption,
 } from "~/lib/bridge/types";
-import type { SupportedChainId, NetworkType } from "~/lib/bridge/networks";
+import type {
+  SupportedChainId,
+  NetworkType,
+  BridgeToChainId,
+} from "~/lib/bridge/networks";
 
 export interface BridgeCardViewProps {
   // Initialization state
@@ -15,10 +19,14 @@ export interface BridgeCardViewProps {
 
   // Chain selection
   fromChain: SupportedChainId | null;
-  toChain: SupportedChainId | null;
+  toChain: BridgeToChainId | null;
   onFromChainChange: (chain: SupportedChainId) => void;
-  onToChainChange: (chain: SupportedChainId) => void;
+  onToChainChange: (chain: BridgeToChainId) => void;
   onSwapChains: () => void;
+
+  // Canton (USDCx) recipient when destination is Canton
+  cantonRecipient: string;
+  onCantonRecipientChange: (value: string) => void;
 
   // Wallet selection
   sourceWallets: WalletOption[];

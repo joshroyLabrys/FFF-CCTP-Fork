@@ -91,7 +91,7 @@ export function FeeSummaryCard({
           <Skeleton className="h-3.5 w-16" />
         ) : (
           <span className="text-[13px] font-medium text-foreground">
-            {fromChain ? getAttestationTimeDisplay(fromChain, isFast) : "~13 min"}
+            {fromChain ? getAttestationTimeDisplay(fromChain, isFast) : getAttestationTimeDisplay("Ethereum", false)}
           </span>
         )}
       </div>

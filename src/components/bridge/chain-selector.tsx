@@ -1,15 +1,17 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, Layers } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { cn } from "~/lib/utils";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   NETWORK_CONFIGS,
   getNetworksByEnvironment,
+  getAvailableToChains,
   useEnvironment,
   type SupportedChainId,
+  type BridgeToChainId,
 } from "~/lib/bridge";
 import {
   NetworkEthereum,
@@ -24,10 +26,13 @@ import {
 } from "@web3icons/react";
 
 interface ChainSelectorProps {
-  selectedChain: SupportedChainId | null;
-  onSelectChain: (chain: SupportedChainId) => void;
+  /** For "To" selector can be Canton */
+  selectedChain: BridgeToChainId | null;
+  onSelectChain: (chain: BridgeToChainId) => void;
   label: string;
   excludeChainId?: SupportedChainId | null;
+  /** When true, uses getAvailableToChains so Canton (USDCx) appears when from is Ethereum/Sepolia */
+  isToSelector?: boolean;
   containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -35,10 +40,18 @@ function ChainIcon({
   chainId,
   size = 24,
 }: {
-  chainId: SupportedChainId;
+  chainId: BridgeToChainId;
   size?: number;
 }) {
   const props = { size, variant: "branded" as const };
+
+  if (chainId === "Canton") {
+    return (
+      <div className="flex size-8 items-center justify-center rounded-full bg-emerald-500/20">
+        <Layers className="size-[22px] text-emerald-600 dark:text-emerald-400" />
+      </div>
+    );
+  }
 
   switch (chainId) {
     case "Ethereum":
@@ -72,6 +85,7 @@ export function ChainSelector({
   onSelectChain,
   label,
   excludeChainId,
+  isToSelector,
   containerRef,
 }: ChainSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -79,11 +93,31 @@ export function ChainSelector({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const environment = useEnvironment();
 
-  const availableChains = getNetworksByEnvironment(environment).filter(
-    (chain) => chain.id !== excludeChainId,
-  );
+  const availableToChains = isToSelector
+    ? getAvailableToChains(excludeChainId ?? null, environment)
+    : null;
 
-  const selected = selectedChain ? NETWORK_CONFIGS[selectedChain] : null;
+  const availableChains = availableToChains
+    ? null
+    : getNetworksByEnvironment(environment).filter(
+        (chain) => chain.id !== excludeChainId,
+      );
+
+  const selected =
+    selectedChain === "Canton"
+      ? { id: "Canton" as const, displayName: "Canton (USDCx)" }
+      : selectedChain
+        ? NETWORK_CONFIGS[selectedChain] ?? null
+        : null;
+
+  const list =
+    availableToChains ??
+    (availableChains ?? []).map((c) => ({
+      id: c.id,
+      displayName: c.displayName,
+      isXReserve: false,
+    }));
+  const listLength = list.length;
 
   const calculateMaxHeight = useCallback(() => {
     if (!dropdownRef.current || !containerRef?.current) {
@@ -94,14 +128,14 @@ export function ChainSelector({
     const dropdownRect = dropdownRef.current.getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
     const availableSpace = containerRect.bottom - dropdownRect.top - 16;
-    const estimatedContentHeight = availableChains.length * 56 + 16;
+    const estimatedContentHeight = listLength * 56 + 16;
 
     if (estimatedContentHeight > availableSpace && availableSpace > 100) {
       setMaxHeight(availableSpace);
     } else {
       setMaxHeight(undefined);
     }
-  }, [containerRef, availableChains.length]);
+  }, [containerRef, listLength]);
 
   useEffect(() => {
     if (isOpen) {
@@ -113,7 +147,7 @@ export function ChainSelector({
 
   const chainList = (
     <div className="space-y-0.5 p-1.5">
-      {availableChains.map((chain) => (
+      {list.map((chain) => (
         <button
           key={chain.id}
           onClick={() => {
@@ -134,7 +168,9 @@ export function ChainSelector({
             <div className="text-foreground text-[14px] font-medium">
               {chain.displayName}
             </div>
-            <div className="text-muted-foreground text-[12px]">USDC</div>
+            <div className="text-muted-foreground text-[12px]">
+              {chain.isXReserve ? "USDCx" : "USDC"}
+            </div>
           </div>
           {selectedChain === chain.id && (
             <Check className="size-3.5 text-[#0071e3]" />
@@ -169,7 +205,9 @@ export function ChainSelector({
                 <div className="text-foreground text-[15px] font-medium">
                   {selected.displayName}
                 </div>
-                <div className="text-muted-foreground text-[12px]">USDC</div>
+                <div className="text-muted-foreground text-[12px]">
+                  {selectedChain === "Canton" ? "USDCx" : "USDC"}
+                </div>
               </div>
             </>
           ) : (

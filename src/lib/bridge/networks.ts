@@ -250,6 +250,9 @@ export const NETWORK_CONFIGS: Record<SupportedChainId, NetworkConfig> = {
   },
 };
 
+/** Destination id for xReserve flow (Canton/USDCx) - not in NETWORK_CONFIGS */
+export type BridgeToChainId = SupportedChainId | "Canton";
+
 /**
  * Get networks for a specific environment
  */
@@ -262,16 +265,53 @@ export function getNetworksByEnvironment(
 }
 
 /**
- * Check if a route is supported
+ * Get available destination chains for the "to" selector.
+ * When fromChain is Ethereum or Ethereum_Sepolia, includes "Canton (USDCx)" as an option.
+ */
+export function getAvailableToChains(
+  fromChain: SupportedChainId | null,
+  environment: NetworkEnvironment,
+): Array<{ id: BridgeToChainId; displayName: string; isXReserve: boolean }> {
+  const cctpNetworks = getNetworksByEnvironment(environment).filter(
+    (n) => n.id !== fromChain,
+  );
+  const list: Array<{
+    id: BridgeToChainId;
+    displayName: string;
+    isXReserve: boolean;
+  }> = cctpNetworks.map((n) => ({
+    id: n.id,
+    displayName: n.displayName,
+    isXReserve: false,
+  }));
+  const isXReserveSource =
+    fromChain === "Ethereum" || fromChain === "Ethereum_Sepolia";
+  if (isXReserveSource) {
+    list.push({
+      id: "Canton",
+      displayName: "Canton (USDCx)",
+      isXReserve: true,
+    });
+  }
+  return list;
+}
+
+/**
+ * Check if a route is supported (CCTP or xReserve to Canton)
  */
 export function isRouteSupported(
   from: SupportedChainId,
-  to: SupportedChainId,
+  to: SupportedChainId | "Canton",
 ): boolean {
   const fromNetwork = NETWORK_CONFIGS[from];
-  const toNetwork = NETWORK_CONFIGS[to];
+  if (!fromNetwork) return false;
 
-  if (!fromNetwork || !toNetwork) return false;
+  if (to === "Canton") {
+    return from === "Ethereum" || from === "Ethereum_Sepolia";
+  }
+
+  const toNetwork = NETWORK_CONFIGS[to];
+  if (!toNetwork) return false;
 
   // Can't bridge to the same network
   if (from === to) return false;

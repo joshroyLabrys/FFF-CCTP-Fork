@@ -96,6 +96,7 @@ export function useBridgeCardState() {
   const [customAddress, setCustomAddress] = useState("");
   const [isAddressValid, setIsAddressValid] = useState(false);
   const [showFeeDetails, setShowFeeDetails] = useState(false);
+  const [cantonRecipient, setCantonRecipient] = useState("");
 
   // Current transaction from store
   const currentTransaction = useCurrentTransaction();
@@ -173,27 +174,30 @@ export function useBridgeCardState() {
   const handleBridge = useCallback(async () => {
     if (!fromChain || !toChain || !amount) return;
 
-    if (!useCustomAddress && !hasDestWallet) {
-      const chainName = NETWORK_CONFIGS[toChain]?.name;
-      promptDestWalletConnection(chainName);
-      return;
-    }
-
-    if (useCustomAddress && !isAddressValid) {
-      return;
+    const isToCanton = toChain === "Canton";
+    if (isToCanton) {
+      if (!cantonRecipient?.trim()) return;
+    } else {
+      if (!useCustomAddress && !hasDestWallet) {
+        const chainName = NETWORK_CONFIGS[toChain]?.name;
+        promptDestWalletConnection(chainName);
+        return;
+      }
+      if (useCustomAddress && !isAddressValid) return;
     }
 
     let notificationId: string | undefined;
+    const toDisplayName = isToCanton ? "Canton (USDCx)" : NETWORK_CONFIGS[toChain]?.displayName;
 
     try {
       notificationId = await addNotification({
         type: "bridge",
         status: "in_progress",
         title: "Bridge Started",
-        message: `Transferring ${amount} USDC from ${NETWORK_CONFIGS[fromChain]?.displayName} to ${NETWORK_CONFIGS[toChain]?.displayName}`,
+        message: `Transferring ${amount} USDC from ${NETWORK_CONFIGS[fromChain]?.displayName} to ${toDisplayName}`,
         bridgeTransactionId: `pending_${Date.now()}`,
         fromChain: NETWORK_CONFIGS[fromChain]?.displayName,
-        toChain: NETWORK_CONFIGS[toChain]?.displayName,
+        toChain: toDisplayName,
         amount,
         token: "USDC",
         actionLabel: "View Progress",
@@ -216,8 +220,8 @@ export function useBridgeCardState() {
         toChain,
         amount,
         recipientAddress: useCustomAddress ? customAddress : undefined,
+        cantonRecipient: isToCanton ? cantonRecipient.trim() : undefined,
         transferMethod,
-        // Pass explicit wallet references for cross-chain network switching
         sourceWallet: selectedSourceWalletFull,
         destWallet: selectedDestWalletFull,
       });
@@ -241,7 +245,7 @@ export function useBridgeCardState() {
           void updateNotification(notificationId, {
             status: "success",
             title: "Bridge Completed",
-            message: `Successfully transferred ${amount} USDC from ${NETWORK_CONFIGS[fromChain]?.displayName} to ${NETWORK_CONFIGS[toChain]?.displayName}`,
+            message: `Successfully transferred ${amount} USDC from ${NETWORK_CONFIGS[fromChain]?.displayName} to ${toDisplayName}`,
             bridgeTransactionId: result.id,
             actionLabel: undefined,
             actionType: undefined,
@@ -288,6 +292,7 @@ export function useBridgeCardState() {
     fromChain,
     toChain,
     amount,
+    cantonRecipient,
     useCustomAddress,
     customAddress,
     isAddressValid,
@@ -313,6 +318,8 @@ export function useBridgeCardState() {
   );
   const needsSourceWallet = Boolean(fromChain && !hasValidSourceWallet);
 
+  const isToCanton = toChain === "Canton";
+
   const canBridge = Boolean(
     isInitialized &&
     fromChain &&
@@ -320,22 +327,33 @@ export function useBridgeCardState() {
     isValidAmount &&
     !isEstimating &&
     hasValidSourceWallet &&
-    (useCustomAddress
-      ? isAddressValid && hasWalletForDestNetwork
-      : hasDestWallet && selectedDestWalletId),
+    (isToCanton
+      ? cantonRecipient.trim().length > 0
+      : useCustomAddress
+        ? isAddressValid && hasWalletForDestNetwork
+        : hasDestWallet && selectedDestWalletId),
   );
 
   const needsDestinationWallet = Boolean(
-    toChain && (!hasDestWallet || !selectedDestWalletId) && !useCustomAddress,
+    !isToCanton &&
+    toChain &&
+    (!hasDestWallet || !selectedDestWalletId) &&
+    !useCustomAddress,
   );
 
-  // Show warning when using custom address but no wallet to sign mint tx
   const needsWalletForMinting = Boolean(
-    useCustomAddress && toChain && isAddressValid && !hasWalletForDestNetwork,
+    !isToCanton &&
+    useCustomAddress &&
+    toChain &&
+    isAddressValid &&
+    !hasWalletForDestNetwork,
   );
 
-  // Get destination network display name for warning message
-  const destNetworkName = toChain ? NETWORK_CONFIGS[toChain]?.name : undefined;
+  const destNetworkName = toChain
+    ? isToCanton
+      ? "Canton (USDCx)"
+      : NETWORK_CONFIGS[toChain]?.name
+    : undefined;
 
   return {
     isInitialized,
@@ -346,6 +364,8 @@ export function useBridgeCardState() {
     onFromChainChange: setFromChain,
     onToChainChange: setToChain,
     onSwapChains: swapChains,
+    cantonRecipient,
+    onCantonRecipientChange: setCantonRecipient,
     sourceWallets,
     selectedSourceWalletId,
     onSelectSourceWallet: handleSelectSourceWallet,

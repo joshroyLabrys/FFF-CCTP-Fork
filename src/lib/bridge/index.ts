@@ -82,18 +82,21 @@ export type {
   BridgeParams,
   TokenBalance,
   WalletOption,
+  BridgeFlowType,
 } from "./types";
 
 // Networks
 export {
   NETWORK_CONFIGS,
   getNetworksByEnvironment,
+  getAvailableToChains,
   getExplorerTxUrl,
   getExplorerAddressUrl,
 } from "./networks";
 export type {
   NetworkEnvironment,
   SupportedChainId,
+  BridgeToChainId,
   NetworkType,
   NetworkConfig,
 } from "./networks";

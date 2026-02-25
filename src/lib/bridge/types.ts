@@ -1,6 +1,11 @@
 import type { SupportedChainId } from "./networks";
 import type { IWallet } from "~/lib/wallet/types";
 
+export type { BridgeToChainId } from "./networks";
+
+/** Bridge flow: CCTP (burn/mint USDC) or xReserve (deposit → USDCx on Canton) */
+export type BridgeFlowType = "cctp" | "xreserve";
+
 /**
  * Transfer method for bridging
  * - 'standard': Lower fees (0% bridge fee), slower completion (~15-19 min finality)
@@ -40,7 +45,9 @@ export interface BridgeTransaction {
   id: string;
   userAddress: string;
   fromChain: SupportedChainId;
-  toChain: SupportedChainId;
+  /** CCTP chain or "Canton" for xReserve flow */
+  toChain: SupportedChainId | "Canton";
+  flow?: BridgeFlowType;
   amount: string;
   token: string;
   status: TransactionStatus;
@@ -61,6 +68,10 @@ export interface BridgeTransaction {
   notificationId?: string; // Link to notification for this transaction
   bridgeResult?: unknown; // Store Bridge Kit result for retry (as unknown since it's from external lib)
   recipientAddress?: string; // Store recipient address for retry
+  /** Canton recipient for xReserve deposits (USDCx on Canton) */
+  cantonRecipient?: string;
+  /** When deposit tx was confirmed (xReserve); used to compute attestation ready time */
+  depositConfirmedAt?: number;
 
   // Wallet addresses for auditing
   sourceAddress?: string; // Source chain wallet address
@@ -119,10 +130,12 @@ export interface BridgeEstimate {
  */
 export interface BridgeParams {
   fromChain: SupportedChainId;
-  toChain: SupportedChainId;
+  toChain: SupportedChainId | "Canton";
   amount: string;
   token?: string;
   recipientAddress?: string;
+  /** Required when toChain is "Canton" (xReserve deposit) */
+  cantonRecipient?: string;
   /** Transfer method: 'standard' (slow, low fees) or 'fast' (quick, higher fees) */
   transferMethod?: TransferMethod;
   /** Explicit source wallet for signing source chain transactions */

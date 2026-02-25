@@ -2,7 +2,11 @@
  * Bridge store type definitions
  */
 
-import type { NetworkEnvironment, SupportedChainId } from "../networks";
+import type {
+  NetworkEnvironment,
+  SupportedChainId,
+  BridgeToChainId,
+} from "../networks";
 import type { BridgeTransaction, TransferMethod } from "../types";
 import type { WindowPosition, WindowType } from "../window-utils";
 
@@ -54,9 +58,9 @@ export interface UserSlice {
  */
 export interface ChainsSlice {
   fromChain: SupportedChainId | null;
-  toChain: SupportedChainId | null;
+  toChain: BridgeToChainId | null;
   setFromChain: (chain: SupportedChainId) => void;
-  setToChain: (chain: SupportedChainId) => void;
+  setToChain: (chain: BridgeToChainId) => void;
   swapChains: () => void;
 }
 
