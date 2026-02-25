@@ -22,6 +22,11 @@ import {
   getTransactionDisplayAddress,
   formatAddressShort,
 } from "~/lib/bridge";
+import {
+  CANTON_CLAIM_DOCS_URL,
+  CANTON_CLAIM_UI_URL,
+  XRESERVE_ATTESTATION_DISPLAY,
+} from "~/lib/xreserve/config";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { ScrollArea } from "~/components/ui/scroll-area";
@@ -43,6 +48,9 @@ export function TransactionWindowView({
   isFailed,
   isInProgress,
   isCancelled,
+  isConfirmingXReserve,
+  onCheckXReserveStatus,
+  isCheckingXReserve,
   fromNetworkDisplayName,
   toNetworkDisplayName,
   onDragStart,
@@ -241,23 +249,31 @@ export function TransactionWindowView({
                           )}
                         </a>
                         <ArrowRight className="size-2.5" />
-                        <a
-                          href={getExplorerAddressUrl(
-                            transaction.toChain,
-                            getTransactionDisplayAddress(transaction),
-                          )}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:text-primary font-mono transition-colors"
-                        >
-                          {formatAddressShort(
-                            getTransactionDisplayAddress(transaction),
-                          )}
-                        </a>
+                        {transaction.toChain === "Canton" ? (
+                          <span className="font-mono">
+                            {formatAddressShort(
+                              getTransactionDisplayAddress(transaction),
+                            )}
+                          </span>
+                        ) : (
+                          <a
+                            href={getExplorerAddressUrl(
+                              transaction.toChain,
+                              getTransactionDisplayAddress(transaction),
+                            )}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary font-mono transition-colors"
+                          >
+                            {formatAddressShort(
+                              getTransactionDisplayAddress(transaction),
+                            )}
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
-                  {transaction.estimatedTime && isInProgress && (
+                  {transaction.estimatedTime && (isInProgress || isConfirmingXReserve) && (
                     <div className="bg-muted/50 flex items-center gap-1 rounded-full px-2 py-1">
                       <Clock className="text-muted-foreground size-3" />
                       <span className="text-muted-foreground text-[10px] font-semibold">
@@ -276,6 +292,7 @@ export function TransactionWindowView({
                     isCompleted && "border-green-500/30 bg-green-500/10",
                     isFailed && "border-red-500/30 bg-red-500/10",
                     isInProgress && "border-border/50 bg-muted/30",
+                    isConfirmingXReserve && "border-border/50 bg-muted/30",
                     isCancelled && "border-gray-500/30 bg-gray-500/10",
                   )}
                 >
@@ -290,7 +307,9 @@ export function TransactionWindowView({
                             Transfer Completed!
                           </p>
                           <p className="text-[10px] text-green-600/80 dark:text-green-400/80">
-                            Your funds have arrived successfully
+                            {transaction.toChain === "Canton"
+                              ? "Deposit confirmed. Claim USDCx on Canton."
+                              : "Your funds have arrived successfully"}
                           </p>
                         </div>
                       </>
@@ -310,7 +329,7 @@ export function TransactionWindowView({
                         </div>
                       </>
                     )}
-                    {isInProgress && (
+                    {isInProgress && !isConfirmingXReserve && (
                       <>
                         <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700/50">
                           <Loader2 className="size-5 animate-spin text-gray-600 dark:text-gray-300" />
@@ -324,6 +343,47 @@ export function TransactionWindowView({
                           </p>
                         </div>
                         <ConfirmDismissButton onDismiss={onDismiss} />
+                      </>
+                    )}
+                    {isConfirmingXReserve && (
+                      <>
+                        <div className="flex size-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20">
+                          <Clock className="size-5 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            Waiting for attestation
+                          </p>
+                          <p className="text-[10px] text-amber-700/90 dark:text-amber-300/90">
+                            Deposit confirmed. Attestation usually takes{" "}
+                            {XRESERVE_ATTESTATION_DISPLAY}. You can close and
+                            return — use Check status when ready.
+                          </p>
+                          {transaction.estimatedTime && (
+                            <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+                              Est. wait ~{formatTime(transaction.estimatedTime)}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={onCheckXReserveStatus}
+                          disabled={isCheckingXReserve}
+                          className="shrink-0 border-amber-500/50 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/20"
+                        >
+                          {isCheckingXReserve ? (
+                            <>
+                              <Loader2 className="size-3.5 animate-spin" />
+                              Checking...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="size-3.5" />
+                              Check status
+                            </>
+                          )}
+                        </Button>
                       </>
                     )}
                     {isCancelled && (
@@ -344,6 +404,53 @@ export function TransactionWindowView({
                   </div>
                 </motion.div>
               </div>
+
+              {/* Claim on Canton (xReserve) — in-app retrieval */}
+              {isCompleted && transaction.toChain === "Canton" && (
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 space-y-3">
+                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                    Claim your USDCx
+                  </p>
+                  <p className="text-[11px] text-emerald-600/90 dark:text-emerald-400/90">
+                    Use the form below to claim the minted USDCx with your Canton
+                    wallet. If the form does not load, open it in a new tab.
+                  </p>
+                  <div className="rounded-lg overflow-hidden border border-emerald-500/20 bg-black/20 min-h-[280px]">
+                    <iframe
+                      title="Claim USDCx on Canton"
+                      src={CANTON_CLAIM_UI_URL}
+                      className="w-full h-[280px] border-0"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={
+                        transaction.sourceTxHash
+                          ? `${CANTON_CLAIM_UI_URL}?depositTx=${encodeURIComponent(transaction.sourceTxHash)}`
+                          : CANTON_CLAIM_UI_URL
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    >
+                      <ExternalLink className="size-3.5" />
+                      Open claim page in new tab
+                    </a>
+                    <span className="text-emerald-600/60 dark:text-emerald-400/60 text-[11px]">
+                      |
+                    </span>
+                    <a
+                      href={CANTON_CLAIM_DOCS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[12px] font-medium text-emerald-600/80 hover:text-emerald-700 dark:text-emerald-400/80 dark:hover:text-emerald-300"
+                    >
+                      Canton xReserve docs
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {/* Steps */}
               <div className="space-y-2">

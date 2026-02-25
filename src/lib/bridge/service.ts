@@ -26,6 +26,11 @@ import { BridgeStorage } from "./storage";
 import { NETWORK_CONFIGS, isRouteSupported } from "./networks";
 import type { SupportedChainId } from "./networks";
 import {
+  isXReserveSourceChain,
+  XRESERVE_ATTESTATION_WAIT_MS,
+} from "~/lib/xreserve/config";
+import { executeXReserveDeposit } from "~/lib/xreserve/deposit-service";
+import {
   getAdapterFactory,
   type AdapterFactory,
   type BridgeAdapter,
@@ -455,6 +460,23 @@ export class CCTPBridgeService implements IBridgeService {
       throw new Error("Bridge service not initialized");
     }
 
+    // xReserve (Canton): no Bridge Kit estimate; return simple gas estimate
+    if (params.toChain === "Canton") {
+      return {
+        fees: {
+          network: params.fromChain,
+          bridge: "0",
+          total: "~0.001",
+        },
+        gasFees: {
+          source: "~0.001",
+          destination: undefined,
+        },
+        estimatedTime: XRESERVE_ATTESTATION_WAIT_MS,
+        receiveAmount: params.amount,
+      };
+    }
+
     const fromAdapter = await this.getAdapterForChain(params.fromChain);
     const toAdapter = await this.getAdapterForChain(params.toChain);
 
@@ -507,6 +529,7 @@ export class CCTPBridgeService implements IBridgeService {
           source: gasFees.find((f) => f.name === "Burn")?.fees?.fee ?? "0",
           destination: gasFees.find((f) => f.name === "Mint")?.fees?.fee,
         },
+        // CCTP estimated time: single source is attestation-times.ts (per-chain, fast vs standard)
         estimatedTime: getAttestationTime(
           params.fromChain,
           params.transferMethod === "fast",
@@ -550,6 +573,11 @@ export class CCTPBridgeService implements IBridgeService {
       throw new Error(
         `Route not supported: ${params.fromChain} -> ${params.toChain}`,
       );
+    }
+
+    // xReserve flow: USDC → USDCx on Canton (no Bridge Kit)
+    if (params.toChain === "Canton") {
+      return this.executeXReserveBridge(params);
     }
 
     const context = await this.createOperationContext(params);
@@ -614,6 +642,12 @@ export class CCTPBridgeService implements IBridgeService {
     const originalTx = await this.storage.getTransaction(transactionId);
     if (!originalTx) {
       throw new Error(`Transaction not found: ${transactionId}`);
+    }
+
+    if (originalTx.toChain === "Canton" || originalTx.flow === "xreserve") {
+      throw new Error(
+        "xReserve (Canton) deposits cannot be retried from this app. Please start a new deposit.",
+      );
     }
 
     if (originalTx.userAddress !== this.userAddress) {
@@ -786,6 +820,12 @@ export class CCTPBridgeService implements IBridgeService {
 
     if (transaction.userAddress !== this.userAddress) {
       throw new Error("Transaction does not belong to current user");
+    }
+
+    if (transaction.toChain === "Canton" || transaction.flow === "xreserve") {
+      throw new Error(
+        "xReserve (Canton) deposits cannot be resumed from this app.",
+      );
     }
 
     // Only allow resuming in-progress transactions
@@ -1305,6 +1345,46 @@ export class CCTPBridgeService implements IBridgeService {
   }
 
   /**
+   * Check xReserve attestation status: if enough time has passed since deposit,
+   * mark attestation step complete and transaction completed (ready to claim).
+   * Call this when user clicks "Check status" on a confirming xReserve transaction.
+   */
+  async checkXReserveAttestationStatus(
+    transactionId: string,
+  ): Promise<BridgeTransaction> {
+    const transaction = await this.storage.getTransaction(transactionId);
+    if (!transaction) {
+      throw new Error(`Transaction not found: ${transactionId}`);
+    }
+    if (transaction.flow !== "xreserve" || transaction.toChain !== "Canton") {
+      return transaction;
+    }
+    if (transaction.status !== "confirming" || !transaction.sourceTxHash) {
+      return transaction;
+    }
+
+    const depositConfirmedAt =
+      transaction.depositConfirmedAt ?? transaction.updatedAt;
+    const waitMs = transaction.estimatedTime ?? XRESERVE_ATTESTATION_WAIT_MS;
+    const elapsed = Date.now() - depositConfirmedAt;
+
+    if (elapsed >= waitMs) {
+      const attStep = transaction.steps.find((s) => s.id === "attestation");
+      if (attStep) {
+        attStep.status = "completed";
+        attStep.timestamp = Date.now();
+      }
+      transaction.status = "completed";
+      transaction.completedAt = Date.now();
+      transaction.updatedAt = Date.now();
+      await this.storage.saveTransaction(transaction);
+      this.syncTransactionState(transaction);
+    }
+
+    return transaction;
+  }
+
+  /**
    * Get all transactions for current user
    */
   async getTransactions(): Promise<BridgeTransaction[]> {
@@ -1412,6 +1492,124 @@ export class CCTPBridgeService implements IBridgeService {
     if (decimals > 6) {
       throw new Error("Amount has too many decimal places (max 6 for USDC)");
     }
+
+    // xReserve (Canton/USDCx): require Canton recipient and Ethereum/Sepolia source
+    if (params.toChain === "Canton") {
+      if (!params.cantonRecipient?.trim()) {
+        throw new Error("Canton recipient address is required for USDCx deposit");
+      }
+      if (!isXReserveSourceChain(params.fromChain)) {
+        throw new Error(
+          "Only Ethereum or Ethereum Sepolia can be used as source for Canton (USDCx)",
+        );
+      }
+    }
+  }
+
+  /**
+   * Execute xReserve deposit: USDC on Ethereum/Sepolia → USDCx on Canton
+   */
+  private async executeXReserveBridge(
+    params: BridgeParams,
+  ): Promise<BridgeTransaction> {
+    const transactionId = nanoid();
+    const sourceWallet =
+      params.sourceWallet ??
+      this.wallets.find((w) => w.chainType === "evm");
+    if (!sourceWallet) {
+      throw new Error("EVM wallet required for xReserve deposit");
+    }
+
+    const fromNetwork = NETWORK_CONFIGS[params.fromChain];
+    if (!fromNetwork?.evmChainId) {
+      throw new Error("Invalid source chain for xReserve");
+    }
+
+    await EVMAdapterCreator.switchNetwork(
+      sourceWallet,
+      fromNetwork.evmChainId,
+      params.fromChain,
+    );
+
+    const transaction: BridgeTransaction = {
+      id: transactionId,
+      userAddress: this.userAddress!,
+      fromChain: params.fromChain,
+      toChain: "Canton",
+      flow: "xreserve",
+      amount: params.amount,
+      token: "USDC",
+      status: "pending",
+      steps: [
+        { id: "approve", name: "Approve", status: "pending", timestamp: Date.now() },
+        { id: "deposit", name: "Deposit", status: "pending", timestamp: Date.now() },
+        { id: "attestation", name: "Attestation", status: "pending", timestamp: Date.now() },
+      ],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      estimatedTime: XRESERVE_ATTESTATION_WAIT_MS,
+      sourceAddress: sourceWallet.address,
+      destinationAddress: params.cantonRecipient,
+      cantonRecipient: params.cantonRecipient,
+    };
+    await this.storage.saveTransaction(transaction);
+    useBridgeStore.getState().addTransaction(transaction);
+    useBridgeStore.getState().setCurrentTransaction(transaction);
+
+    this.activeOperations.add(transaction.id);
+    try {
+      transaction.status = "bridging";
+      const approveStep = transaction.steps[0];
+      if (approveStep) approveStep.status = "in_progress";
+      await this.saveIfNotCancelled(transaction);
+      this.syncTransactionState(transaction);
+
+      const result = await executeXReserveDeposit(
+        {
+          sourceChainId: params.fromChain,
+          amount: params.amount,
+          cantonRecipient: params.cantonRecipient!,
+          depositorAddress: sourceWallet.address,
+          wallet: sourceWallet,
+        },
+        {
+          onApproveTx: (txHash) => {
+            if (approveStep) {
+              approveStep.status = "completed";
+              approveStep.txHash = txHash;
+            }
+            const depositStep = transaction.steps[1];
+            if (depositStep) depositStep.status = "in_progress";
+            this.syncTransactionState(transaction);
+          },
+          onDepositTx: (txHash) => {
+            const depositStep = transaction.steps[1];
+            if (depositStep) {
+              depositStep.status = "completed";
+              depositStep.txHash = txHash;
+            }
+            transaction.sourceTxHash = txHash;
+            transaction.depositConfirmedAt = Date.now();
+            const attStep = transaction.steps[2];
+            if (attStep) attStep.status = "in_progress";
+            this.syncTransactionState(transaction);
+          },
+        },
+      );
+
+      transaction.sourceTxHash = result.depositTxHash;
+      transaction.depositConfirmedAt = transaction.depositConfirmedAt ?? Date.now();
+      transaction.status = "confirming";
+      transaction.updatedAt = Date.now();
+      await this.saveIfNotCancelled(transaction);
+      this.syncTransactionState(transaction);
+    } catch (error) {
+      await this.handleBridgeError(transaction, error);
+    } finally {
+      this.activeOperations.delete(transaction.id);
+    }
+
+    return transaction;
   }
 
   /**

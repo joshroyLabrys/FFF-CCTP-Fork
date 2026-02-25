@@ -80,11 +80,12 @@ export function getWalletsForNetworkType<T>(
 export function getTransactionDisplayAddress(
   transaction: Pick<
     BridgeTransaction,
-    "destinationAddress" | "recipientAddress" | "userAddress"
+    "destinationAddress" | "recipientAddress" | "userAddress" | "cantonRecipient"
   >,
 ): string {
   return (
     transaction.destinationAddress ??
+    transaction.cantonRecipient ??
     transaction.recipientAddress ??
     transaction.userAddress
   );

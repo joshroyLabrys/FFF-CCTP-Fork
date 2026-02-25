@@ -81,6 +81,8 @@ export function BridgeCardView({
   onFromChainChange,
   onToChainChange,
   onSwapChains,
+  cantonRecipient,
+  onCantonRecipientChange,
   sourceWallets,
   selectedSourceWalletId,
   onSelectSourceWallet,
@@ -236,9 +238,12 @@ export function BridgeCardView({
               />
             </div>
 
-            {/* Swap Button */}
+            {/* Swap Button — hide when destination is Canton (xReserve) */}
             <div className="my-3">
-              <SwapButton onSwap={onSwapChains} />
+              <SwapButton
+                onSwap={onSwapChains}
+                disabled={toChain === "Canton"}
+              />
             </div>
 
             {/* ─── To section ─── */}
@@ -248,12 +253,50 @@ export function BridgeCardView({
                 onSelectChain={onToChainChange}
                 label="To"
                 excludeChainId={fromChain}
+                isToSelector
                 containerRef={bridgeCardRef}
               />
 
-              {/* Destination wallet/address — animates in when To chain is selected */}
+              {/* Canton recipient (USDCx) when destination is Canton */}
               <AnimatePresence initial={false}>
-                {toChain && toNetworkType && (
+                {toChain === "Canton" && (
+                  <motion.div
+                    key="canton-recipient"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={expandTransition}
+                    className="relative z-10 overflow-hidden"
+                  >
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                      Canton recipient address
+                    </label>
+                    <input
+                      type="text"
+                      value={cantonRecipient}
+                      onChange={(e) => onCantonRecipientChange(e.target.value)}
+                      placeholder="Enter Canton address (e.g. participant ID)"
+                      className="w-full rounded-xl border border-black/[0.08] bg-black/[0.02] px-4 py-3 text-[15px] outline-none placeholder:text-muted-foreground focus:border-[#0071e3] dark:border-white/[0.08] dark:bg-white/[0.04] dark:focus:border-[#0071e3]"
+                    />
+                    <p className="text-muted-foreground mt-1 text-[11px]">
+                      USDCx will be minted to this address on Canton. See{" "}
+                      <a
+                        href="https://docs.digitalasset.com/usdc/xreserve/index.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#0071e3] hover:underline"
+                      >
+                        Canton docs
+                      </a>{" "}
+                      for format.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Destination wallet/address — when To chain is not Canton */}
+              <AnimatePresence initial={false}>
+                {toChain && toChain !== "Canton" && toNetworkType && (
                   <motion.div
                     key="dest-section"
                     initial={{ height: 0, opacity: 0 }}
@@ -436,7 +479,7 @@ export function BridgeCardView({
                           fromChain,
                           transferMethod === "fast",
                         )
-                      : "~13 min"}
+                      : getAttestationTimeDisplay("Ethereum", false)}
                   </span>
                 )}
               </div>

@@ -7,12 +7,14 @@ import { cn } from "~/lib/utils";
 
 interface SwapButtonProps {
   onSwap: () => void;
+  disabled?: boolean;
 }
 
-export function SwapButton({ onSwap }: SwapButtonProps) {
+export function SwapButton({ onSwap, disabled }: SwapButtonProps) {
   const [rotation, setRotation] = useState(0);
 
   const handleClick = () => {
+    if (disabled) return;
     setRotation((prev) => prev + 180);
     onSwap();
   };
@@ -21,11 +23,13 @@ export function SwapButton({ onSwap }: SwapButtonProps) {
     <div className="relative flex justify-center">
       <motion.button
         onClick={handleClick}
+        disabled={disabled}
         className={cn(
           "relative z-10 flex size-9 items-center justify-center rounded-full transition-colors",
           "bg-black/[0.04] dark:bg-white/[0.07]",
           "hover:bg-black/[0.07] dark:hover:bg-white/[0.11]",
           "focus:ring-0 focus:outline-none",
+          disabled && "pointer-events-none opacity-50",
         )}
         whileTap={{ scale: 0.92 }}
         animate={{ rotate: rotation }}

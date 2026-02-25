@@ -22,10 +22,15 @@ export interface TransactionWindowViewProps {
   isMaximized: boolean;
   copiedHash: string | null;
   isRetrying: boolean;
+  isResuming?: boolean;
+  isRecovering?: boolean;
   isCompleted: boolean;
   isFailed: boolean;
   isInProgress: boolean;
   isCancelled: boolean;
+  isConfirmingXReserve?: boolean;
+  onCheckXReserveStatus?: () => void;
+  isCheckingXReserve?: boolean;
   fromNetworkDisplayName: string;
   toNetworkDisplayName: string;
   fromNetworkExplorerUrl: string;

@@ -350,6 +350,54 @@ export function useRecoverBridge() {
 }
 
 /**
+ * Hook for checking xReserve attestation status (Canton deposits).
+ * When enough time has passed since deposit (~15 min), marks transaction completed and ready to claim.
+ */
+export function useCheckXReserveStatus() {
+  const queryClient = useQueryClient();
+  const [isChecking, setIsChecking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const updateTransaction = useBridgeStore((state) => state.updateTransaction);
+  const updateTransactionInWindow = useBridgeStore(
+    (state) => state.updateTransactionInWindow,
+  );
+
+  const checkXReserveStatus = useCallback(
+    async (transactionId: string): Promise<BridgeTransaction> => {
+      const service = getBridgeService();
+
+      setIsChecking(true);
+      setError(null);
+
+      try {
+        const transaction =
+          await service.checkXReserveAttestationStatus(transactionId);
+
+        updateTransaction(transaction.id, transaction);
+        updateTransactionInWindow(transaction.id, transaction);
+        delayedCallback(transaction.status === "completed", () => {
+          void queryClient.invalidateQueries({
+            queryKey: bridgeKeys.stats(),
+          });
+        });
+
+        return transaction;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Check status failed";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsChecking(false);
+      }
+    },
+    [updateTransaction, updateTransactionInWindow, queryClient],
+  );
+
+  return { checkXReserveStatus, isChecking, error };
+}
+
+/**
  * Hook for wallet balance using React Query
  * Automatically waits for service initialization via the enabled option
  *
