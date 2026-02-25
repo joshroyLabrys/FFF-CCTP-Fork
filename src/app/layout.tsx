@@ -11,7 +11,7 @@ import { Analytics } from "@vercel/analytics/next";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.fff-bridge.net"),
   title: "FFF CCTP Bridge - Cross-Chain USDC Transfer",
-  description:
+  description: 
     "Bridge USDC across chains instantly with Circle's Cross-Chain Transfer Protocol. Fast, secure transfers between Ethereum, Base, Arbitrum, and Solana.",
   keywords: [
     "USDC",
