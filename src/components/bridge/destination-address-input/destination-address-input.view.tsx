@@ -20,9 +20,9 @@ export function DestinationAddressInputView({
           "bg-black/[0.03] dark:bg-white/[0.05]",
           "focus-within:ring-1 focus-within:ring-[#0071e3]/30",
           validationError && value
-            ? "ring-1 ring-red-500/20"
+            ? "ring-1 ring-rose-500/20"
             : isValid && value
-              ? "ring-1 ring-green-500/20"
+              ? "ring-1 ring-emerald-500/20"
               : "",
         )}
       >
@@ -36,9 +36,9 @@ export function DestinationAddressInputView({
             "flex-1 bg-transparent font-mono text-[13px] outline-none",
             "placeholder:text-muted-foreground/40",
             validationError && value
-              ? "text-red-500"
+              ? "text-rose-700 dark:text-rose-400"
               : isValid && value
-                ? "text-green-600 dark:text-green-500"
+                ? "text-emerald-700 dark:text-emerald-400"
                 : "text-foreground",
           )}
         />
@@ -46,9 +46,9 @@ export function DestinationAddressInputView({
         {value && (
           <div className="shrink-0">
             {isValid ? (
-              <CheckCircle2 className="size-4 text-green-500" />
+              <CheckCircle2 className="size-4 text-emerald-700 dark:text-emerald-400" />
             ) : (
-              <AlertCircle className="size-4 text-red-500" />
+              <AlertCircle className="size-4 text-rose-700 dark:text-rose-400" />
             )}
           </div>
         )}
@@ -63,13 +63,13 @@ export function DestinationAddressInputView({
           <div className="flex items-start gap-1.5 text-[12px]">
             {validationError ? (
               <>
-                <AlertCircle className="mt-0.5 size-3 shrink-0 text-red-500" />
-                <span className="text-red-500">{validationError}</span>
+                <AlertCircle className="mt-0.5 size-3 shrink-0 text-rose-700 dark:text-rose-400" />
+                <span className="text-rose-700 dark:text-rose-400">{validationError}</span>
               </>
             ) : isValid ? (
               <>
-                <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-green-500" />
-                <span className="text-green-600 dark:text-green-500">
+                <CheckCircle2 className="mt-0.5 size-3 shrink-0 text-emerald-700 dark:text-emerald-400" />
+                <span className="text-emerald-700 dark:text-emerald-400">
                   Valid {formatDescription}
                 </span>
               </>

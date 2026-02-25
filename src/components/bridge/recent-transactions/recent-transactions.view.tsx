@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import { ArrowRightLeft } from "lucide-react";
 import { Skeleton } from "~/components/ui/skeleton";
 import { TransactionRow } from "./transaction-row.view";
 import type { RecentTransactionsViewProps } from "./recent-transactions.types";
@@ -30,7 +31,7 @@ export function RecentTransactionsView({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="border-border/50 bg-card/50 rounded-2xl border p-4 backdrop-blur-xl"
+            className="rounded-2xl border border-border bg-black/[0.03] p-4 dark:bg-white/[0.04]"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -56,9 +57,19 @@ export function RecentTransactionsView({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-muted-foreground w-full max-w-4xl text-center"
+        className="flex w-full max-w-4xl flex-col items-center justify-center gap-3 py-8"
       >
-        No {environment} transactions yet
+        <div className="flex size-16 items-center justify-center rounded-full bg-black/[0.03] dark:bg-white/[0.04]">
+          <ArrowRightLeft className="size-8 text-muted-foreground/50" />
+        </div>
+        <div className="text-center">
+          <p className="text-[13px] font-medium text-foreground">
+            No transactions yet
+          </p>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            Your bridge activity will appear here
+          </p>
+        </div>
       </motion.div>
     );
   }
@@ -72,10 +83,10 @@ export function RecentTransactionsView({
     >
       {!hideHeader && (
         <div className="mb-6">
-          <h3 className="text-foreground text-2xl font-bold">
+          <h3 className="text-[15px] font-semibold text-foreground">
             Recent Transactions
           </h3>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="mt-1 text-[12px] text-muted-foreground">
             Your latest {environment} bridge activity
           </p>
         </div>
@@ -97,12 +108,12 @@ export function RecentTransactionsView({
 
         {!maxItems && isFetchingNextPage && (
           <div className="flex justify-center py-4">
-            <div className="border-primary size-6 animate-spin rounded-full border-2 border-t-transparent" />
+            <div className="size-6 animate-spin rounded-full border-2 border-[#0071e3] border-t-transparent" />
           </div>
         )}
 
         {!maxItems && !hasNextPage && filteredTransactions.length > 0 && (
-          <p className="text-muted-foreground py-2 text-center text-xs">
+          <p className="py-2 text-center text-[12px] text-muted-foreground">
             No more transactions
           </p>
         )}

@@ -64,7 +64,7 @@ function StatsContent({
             {stats.totalTransactions.toLocaleString("en-US")}
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            <span className="text-amber-500">
+            <span className="text-amber-700 dark:text-amber-400">
               {stats.fastTransactions.toLocaleString("en-US")} fast
             </span>
             {" · "}
@@ -74,7 +74,7 @@ function StatsContent({
 
         <div className="rounded-xl bg-black/[0.03] px-3 py-3 dark:bg-white/[0.04]">
           <div className="mb-1.5 flex items-center gap-1.5">
-            <Zap className="size-3.5 text-amber-500" />
+            <Zap className="size-3.5 text-amber-700 dark:text-amber-400" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Fees Paid
             </span>
@@ -87,20 +87,22 @@ function StatsContent({
       </div>
 
       {/* Savings */}
-      <div className="rounded-xl bg-green-500/[0.07] px-4 py-3 dark:bg-green-500/[0.1]">
+      <div className="rounded-xl bg-emerald-500/[0.07] px-4 py-3 dark:bg-emerald-500/[0.1]">
         <div className="mb-1.5 flex items-center gap-1.5">
-          <PiggyBank className="size-3.5 text-green-600 dark:text-green-500" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-green-700 dark:text-green-500">
+          <PiggyBank className="size-3.5 text-emerald-700 dark:text-emerald-400" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
             Estimated Savings
           </span>
         </div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[20px] font-semibold tracking-tight text-green-700 dark:text-green-400">
+          <span className="text-[20px] font-semibold tracking-tight text-emerald-800 dark:text-emerald-300">
             ~${stats.estimatedSavings}
           </span>
-          <span className="text-[12px] text-green-600/70 dark:text-green-500/70">USDC</span>
+          <span className="text-[12px] text-emerald-700/80 dark:text-emerald-400/80">
+            USDC
+          </span>
         </div>
-        <p className="mt-1 text-[11px] text-green-600/70 dark:text-green-500/70">
+        <p className="mt-1 text-[11px] text-emerald-700/70 dark:text-emerald-400/70">
           vs. third-party bridges at ~0.2% fee
         </p>
       </div>

@@ -9,12 +9,16 @@ import {
 } from "~/lib/notifications";
 import { BridgeStorage } from "~/lib/bridge/storage";
 import { useBridgeStore } from "~/lib/bridge";
+import { env } from "~/env";
+import { MOCK_ACTIVITY_NOTIFICATIONS } from "~/lib/mocks/activity-mocks";
 import type { MobileNotificationDrawerProps } from "./mobile-notification-drawer.types";
 
 export function useMobileNotificationDrawerState({
   onNotificationAction,
 }: MobileNotificationDrawerProps) {
-  const notifications = useNotifications();
+  const realNotifications = useNotifications();
+  const useMock = env.NEXT_PUBLIC_USE_MOCK_ACTIVITY === "true";
+  const notifications = useMock ? MOCK_ACTIVITY_NOTIFICATIONS : realNotifications;
   const setIsOpen = useSetNotificationPanelOpen();
   const clearAll = useClearAllNotifications();
 
@@ -53,8 +57,8 @@ export function useMobileNotificationDrawerState({
   );
 
   const handleClearAll = useCallback(() => {
-    void clearAll();
-  }, [clearAll]);
+    if (!useMock) void clearAll();
+  }, [clearAll, useMock]);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);

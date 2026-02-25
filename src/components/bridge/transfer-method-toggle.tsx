@@ -61,7 +61,7 @@ export function TransferMethodToggle({
                 <span
                   className={cn(
                     "size-1.5 rounded-full transition-colors",
-                    isSelected ? "bg-amber-500" : "bg-amber-400/50",
+                    isSelected ? "bg-amber-600 dark:bg-amber-400" : "bg-amber-500/60 dark:bg-amber-400/50",
                   )}
                 />
               )}

@@ -9,11 +9,13 @@ import {
   useBridgeStore,
   type BridgeTransaction,
 } from "~/lib/bridge";
+import { env } from "~/env";
+import { MOCK_ACTIVITY_TRANSACTIONS } from "~/lib/mocks/activity-mocks";
 
 export function useRecentTransactionsState() {
   const {
-    transactions,
-    isLoading,
+    transactions: queryTransactions,
+    isLoading: queryLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -24,17 +26,21 @@ export function useRecentTransactionsState() {
     (state) => state.openTransactionWindow,
   );
 
+  const useMock = env.NEXT_PUBLIC_USE_MOCK_ACTIVITY === "true";
+  const transactions = useMock ? MOCK_ACTIVITY_TRANSACTIONS : queryTransactions;
+  const isLoading = useMock ? false : queryLoading;
+
   // Intersection observer for infinite scroll
   const { ref: loadMoreRef, inView } = useInView({
     rootMargin: "100px",
   });
 
-  // Fetch next page when scrolled into view
+  // Fetch next page when scrolled into view (no-op when mock)
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    if (!useMock && inView && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [useMock, inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleOpenTransaction = useCallback(
     (transaction: BridgeTransaction) => {
@@ -54,8 +60,8 @@ export function useRecentTransactionsState() {
   return {
     filteredTransactions,
     isLoading,
-    isFetchingNextPage,
-    hasNextPage,
+    isFetchingNextPage: useMock ? false : isFetchingNextPage,
+    hasNextPage: useMock ? false : hasNextPage,
     environment,
     onOpenTransaction: handleOpenTransaction,
     loadMoreRef,

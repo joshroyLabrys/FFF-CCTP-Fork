@@ -150,13 +150,13 @@ export function BridgeCardView({
                   transition={expandTransition}
                   className="overflow-hidden"
                 >
-                  <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/[0.08]">
-                    <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50/80 p-3 dark:border-amber-500/15 dark:bg-amber-500/[0.08]">
+                    <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400" />
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-amber-700 dark:text-amber-400">
+                      <p className="text-[13px] font-medium text-amber-800 dark:text-amber-400">
                         Network switch failed
                       </p>
-                      <p className="mt-0.5 text-[12px] text-amber-600/80 dark:text-amber-500/80">
+                      <p className="mt-0.5 text-[12px] text-amber-700/90 dark:text-amber-400/80">
                         {switchError}. Switch networks manually in your wallet.
                       </p>
                     </div>
@@ -325,20 +325,20 @@ export function BridgeCardView({
                     transition={expandTransition}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50 p-3 dark:border-amber-500/20 dark:bg-amber-500/[0.08]">
-                      <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                    <div className="flex items-center gap-3 rounded-xl border border-amber-200/60 bg-amber-50/80 p-3 dark:border-amber-500/15 dark:bg-amber-500/[0.08]">
+                      <AlertTriangle className="size-4 shrink-0 text-amber-700 dark:text-amber-400" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-[13px] font-medium text-amber-700 dark:text-amber-400">
+                        <p className="text-[13px] font-medium text-amber-800 dark:text-amber-400">
                           {destNetworkName} wallet required
                         </p>
-                        <p className="mt-0.5 text-[12px] text-amber-600/70 dark:text-amber-400/70">
+                        <p className="mt-0.5 text-[12px] text-amber-700/80 dark:text-amber-400/70">
                           Needed to pay gas fees on the destination chain
                         </p>
                       </div>
                       <Button
                         onClick={() => onPromptDestWallet(destNetworkName)}
                         size="sm"
-                        className="h-7 shrink-0 rounded-lg border-0 bg-amber-500/10 px-3 text-[12px] font-semibold text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
+                        className="h-7 shrink-0 rounded-lg border-0 bg-amber-500/10 px-3 text-[12px] font-semibold text-amber-800 hover:bg-amber-500/15 dark:text-amber-400 dark:hover:bg-amber-500/20"
                       >
                         Connect
                       </Button>
@@ -405,7 +405,7 @@ export function BridgeCardView({
                 ) : transferMethod === "fast" &&
                   estimate?.providerFees &&
                   estimate.providerFees.length > 0 ? (
-                  <span className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                  <span className="text-[13px] font-medium text-amber-800 dark:text-amber-400">
                     ~0.1% (
                     {formatUSDC(
                       estimate.providerFees.reduce(
@@ -416,7 +416,7 @@ export function BridgeCardView({
                     USDC)
                   </span>
                 ) : (
-                  <span className="text-[13px] font-medium text-green-600 dark:text-green-500">
+                  <span className="text-[13px] font-medium text-emerald-700 dark:text-emerald-400">
                     Free · 0%
                   </span>
                 )}
@@ -526,7 +526,7 @@ export function BridgeCardView({
                   transition={expandTransition}
                   className="overflow-hidden"
                 >
-                  <div className="mt-4 rounded-xl border border-red-200/60 bg-red-50 p-3 text-[13px] text-red-600 dark:border-red-500/20 dark:bg-red-500/[0.08] dark:text-red-400">
+                  <div className="mt-4 rounded-xl border border-rose-200/60 bg-rose-50/80 p-3 text-[13px] text-rose-700 dark:border-rose-500/15 dark:bg-rose-500/[0.08] dark:text-rose-400">
                     {bridgeError}
                   </div>
                 </motion.div>

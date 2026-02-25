@@ -139,8 +139,8 @@ export function FeeSummaryCard({
           className={cn(
             "flex items-center justify-between rounded-xl px-3 py-2.5",
             isFast && hasCctpFee
-              ? "bg-amber-500/[0.07] dark:bg-amber-500/[0.1]"
-              : "bg-green-500/[0.07] dark:bg-green-500/[0.1]",
+              ? "bg-amber-500/[0.08] dark:bg-amber-500/[0.1]"
+              : "bg-emerald-500/[0.07] dark:bg-emerald-500/[0.1]",
           )}
         >
           <span className="text-[13px] text-muted-foreground">
@@ -150,8 +150,8 @@ export function FeeSummaryCard({
             className={cn(
               "font-mono text-[13px] font-semibold",
               isFast && hasCctpFee
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-green-600 dark:text-green-500",
+                ? "text-amber-800 dark:text-amber-400"
+                : "text-emerald-800 dark:text-emerald-400",
             )}
           >
             {isFast && hasCctpFee ? `${cctpFeeAmount} USDC` : "Free · 0%"}

@@ -18,6 +18,9 @@ export const env = createEnv({
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
     NEXT_PUBLIC_DYNAMIC_PROJECT_ID: z.string(),
+    NEXT_PUBLIC_USE_MOCK_ACTIVITY: z
+      .union([z.literal("true"), z.literal("false")])
+      .optional(),
   },
 
   /**
@@ -28,6 +31,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
     NEXT_PUBLIC_DYNAMIC_PROJECT_ID: process.env.NEXT_PUBLIC_DYNAMIC_PROJECT_ID,
+    NEXT_PUBLIC_USE_MOCK_ACTIVITY: process.env.NEXT_PUBLIC_USE_MOCK_ACTIVITY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

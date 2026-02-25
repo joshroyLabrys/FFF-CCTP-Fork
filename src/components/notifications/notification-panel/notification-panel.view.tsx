@@ -29,7 +29,7 @@ export function NotificationPanelContent({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0"
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px]"
             style={{ zIndex: 199 }}
             onClick={onClose}
           />
@@ -49,7 +49,7 @@ export function NotificationPanelContent({
             style={{ zIndex: 200 }}
           >
             {/* Notification panel container */}
-            <div className="border-border bg-white/95 dark:bg-[#1c1c1e]/95 overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-2xl">
+            <div className="overflow-hidden rounded-2xl border border-border bg-white/[0.97] shadow-2xl backdrop-blur-2xl dark:bg-[#111111]/[0.97]">
               {/* Header */}
               <div className="border-border border-b bg-black/[0.02] px-4 py-3 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between">
@@ -82,14 +82,14 @@ export function NotificationPanelContent({
               <ScrollArea className="macos-window-scrollbar max-h-[32rem]">
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-12">
-                    <div className="bg-muted/30 flex size-16 items-center justify-center rounded-full">
-                      <Bell className="text-muted-foreground/50 size-8" />
+                    <div className="flex size-16 items-center justify-center rounded-full bg-black/[0.03] dark:bg-white/[0.04]">
+                      <Bell className="size-8 text-muted-foreground/50" />
                     </div>
                     <div className="text-center">
-                      <p className="text-foreground text-sm font-medium">
+                      <p className="text-[13px] font-medium text-foreground">
                         No notifications
                       </p>
-                      <p className="text-muted-foreground mt-1 text-xs">
+                      <p className="mt-1 text-[12px] text-muted-foreground">
                         You&apos;re all caught up!
                       </p>
                     </div>

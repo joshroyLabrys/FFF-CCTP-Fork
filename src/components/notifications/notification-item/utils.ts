@@ -20,18 +20,24 @@ export function getStatusIcon(status: Notification["status"]): ReactNode {
   switch (status) {
     case "success":
       return createElement(CheckCircle2, {
-        className: "size-5 text-green-500",
+        className: "size-5 text-emerald-700 dark:text-emerald-400",
       });
     case "failed":
-      return createElement(AlertCircle, { className: "size-5 text-red-500" });
+      return createElement(AlertCircle, {
+        className: "size-5 text-rose-700 dark:text-rose-400",
+      });
     case "in_progress":
       return createElement(Loader2, {
-        className: "size-5 animate-spin text-gray-600 dark:text-gray-400",
+        className: "size-5 animate-spin text-zinc-600 dark:text-zinc-400",
       });
     case "pending":
-      return createElement(Clock, { className: "size-5 text-yellow-500" });
+      return createElement(Clock, {
+        className: "size-5 text-amber-700 dark:text-amber-400",
+      });
     case "info":
     default:
-      return createElement(Info, { className: "size-5 text-gray-500" });
+      return createElement(Info, {
+        className: "size-5 text-zinc-500 dark:text-zinc-400",
+      });
   }
 }

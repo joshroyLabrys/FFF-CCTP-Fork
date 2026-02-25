@@ -9,6 +9,8 @@ import {
   useIsNotificationPanelOpen,
   useLoadNotifications,
 } from "~/lib/notifications";
+import { env } from "~/env";
+import { MOCK_ACTIVITY_NOTIFICATIONS } from "~/lib/mocks/activity-mocks";
 import { cn } from "~/lib/utils";
 
 interface NotificationBellProps {
@@ -16,7 +18,10 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ isDragging }: NotificationBellProps) {
-  const unreadCount = useUnreadCount();
+  const storeUnread = useUnreadCount();
+  const mockUnread = MOCK_ACTIVITY_NOTIFICATIONS.filter((n) => !n.read).length;
+  const unreadCount =
+    env.NEXT_PUBLIC_USE_MOCK_ACTIVITY === "true" ? mockUnread : storeUnread;
   const togglePanel = useToggleNotificationPanel();
   const isOpen = useIsNotificationPanelOpen();
   const loadNotifications = useLoadNotifications();

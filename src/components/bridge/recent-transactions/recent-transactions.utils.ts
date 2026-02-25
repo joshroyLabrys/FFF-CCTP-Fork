@@ -1,4 +1,16 @@
 /**
+ * Format USDC amount with comma thousands and 2 decimal places
+ */
+export function formatUSDC(value: number | string): string {
+  const n = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(n)) return "0.00";
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
  * Format a timestamp to a human-readable relative time string
  */
 export function formatTimestamp(timestamp: number): string {

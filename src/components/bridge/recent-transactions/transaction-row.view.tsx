@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { NETWORK_CONFIGS, getExplorerAddressUrl } from "~/lib/bridge";
-import { formatTimestamp } from "./recent-transactions.utils";
+import {
+  formatTimestamp,
+  formatUSDC,
+} from "./recent-transactions.utils";
 import type { TransactionRowProps } from "./recent-transactions.types";
 
 /** Truncate address for display (0x1234...5678) */
@@ -47,35 +50,37 @@ export function TransactionRow({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: 0.2 + index * 0.08 }}
-      whileHover={disableClick ? undefined : { scale: 1.01, x: 4 }}
       onClick={disableClick ? undefined : () => onOpenTransaction(tx)}
       className={cn(
-        "group border-border/50 bg-card/50 relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all",
+        "group relative overflow-hidden rounded-2xl border border-border bg-black/[0.03] transition-colors dark:bg-white/[0.04]",
         disableClick
           ? "p-3"
-          : "hover:border-border hover:bg-card/80 cursor-pointer p-4 hover:shadow-lg",
+          : "cursor-pointer p-4 hover:bg-black/[0.05] dark:hover:bg-white/[0.07]",
       )}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div
-          className={cn("flex items-center", disableClick ? "gap-3" : "gap-4")}
+          className={cn(
+            "flex min-w-0 flex-1 items-start overflow-hidden",
+            disableClick ? "gap-3" : "gap-4",
+          )}
         >
-          {/* Status Icon */}
+          {/* Status Icon — fixed size so it stays a circle when row has multiple lines */}
           <div
             className={cn(
-              "flex items-center justify-center rounded-xl",
+              "flex shrink-0 items-center justify-center rounded-full",
               disableClick ? "size-8" : "size-10",
-              isCompleted && "bg-green-500/10",
-              isPending && "bg-blue-500/10",
-              isFailed && "bg-red-500/10",
-              isCancelled && "bg-gray-500/10",
+              isCompleted && "bg-emerald-500/12 dark:bg-emerald-500/15",
+              isPending && "bg-blue-500/10 dark:bg-blue-500/15",
+              isFailed && "bg-rose-500/12 dark:bg-rose-500/15",
+              isCancelled && "bg-zinc-400/15 dark:bg-zinc-500/15",
             )}
           >
             {isCompleted && (
               <CheckCircle2
                 className={cn(
                   disableClick ? "size-4" : "size-5",
-                  "text-green-500",
+                  "text-emerald-700 dark:text-emerald-400",
                 )}
               />
             )}
@@ -83,7 +88,7 @@ export function TransactionRow({
               <Clock
                 className={cn(
                   disableClick ? "size-4" : "size-5",
-                  "animate-pulse text-blue-500",
+                  "animate-pulse text-blue-600 dark:text-blue-400",
                 )}
               />
             )}
@@ -91,7 +96,7 @@ export function TransactionRow({
               <AlertCircle
                 className={cn(
                   disableClick ? "size-4" : "size-5",
-                  "text-red-500",
+                  "text-rose-700 dark:text-rose-400",
                 )}
               />
             )}
@@ -99,33 +104,34 @@ export function TransactionRow({
               <X
                 className={cn(
                   disableClick ? "size-4" : "size-5",
-                  "text-gray-500",
+                  "text-zinc-600 dark:text-zinc-400",
                 )}
               />
             )}
           </div>
 
-          {/* Transaction Details */}
-          <div>
+          {/* Transaction Details — min-w-0 so route can truncate and never overlap status badge */}
+          <div className="min-w-0 flex-1">
             <div
               className={cn(
                 "text-foreground flex items-center gap-2 font-medium",
                 disableClick ? "text-xs" : "text-sm",
               )}
             >
-              <span>{fromNetwork?.displayName}</span>
-              <ArrowRight
-                className={cn(
-                  "text-muted-foreground",
-                  disableClick ? "size-3" : "size-4",
-                )}
-              />
-              <span>{toNetwork?.displayName}</span>
-              {/* Transfer method badge (hide on mobile) */}
+              <span
+                className="min-w-0 flex-1 truncate"
+                title={`${fromNetwork?.displayName} → ${toNetwork?.displayName}`}
+              >
+                {fromNetwork?.displayName} → {toNetwork?.displayName}
+              </span>
+              {/* Fast = lightning only (no text) to avoid overlap with status badge */}
               {!disableClick && isFastMode && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-amber-500">
-                  <Zap className="size-2.5" />
-                  Fast
+                <span
+                  className="shrink-0 rounded-full bg-amber-500/10 p-0.5 text-amber-700 dark:text-amber-400"
+                  title="Fast transfer"
+                  aria-label="Fast transfer"
+                >
+                  <Zap className="size-3" />
                 </span>
               )}
             </div>
@@ -135,7 +141,7 @@ export function TransactionRow({
                 disableClick ? "text-[10px]" : "text-xs",
               )}
             >
-              <span>{tx.amount} USDC</span>
+              <span>{formatUSDC(tx.amount)} USDC</span>
               <span>•</span>
               <span>{formatTimestamp(tx.createdAt)}</span>
               {/* Show provider fee for completed fast transactions (hide on mobile) */}
@@ -146,8 +152,8 @@ export function TransactionRow({
                 parseFloat(tx.providerFeeUsdc) > 0 && (
                   <>
                     <span>•</span>
-                    <span className="text-amber-500">
-                      Fee: {parseFloat(tx.providerFeeUsdc).toFixed(6)} USDC
+                    <span className="text-amber-700 dark:text-amber-400">
+                      Fee: {formatUSDC(tx.providerFeeUsdc)} USDC
                     </span>
                   </>
                 )}
@@ -180,18 +186,22 @@ export function TransactionRow({
           </div>
         </div>
 
-        {/* Status badge */}
-        <div className="flex items-center gap-2">
+        {/* Status badge — shrink-0 so it never overlaps the route */}
+        <div className="flex shrink-0 items-center gap-2">
           <span
             className={cn(
               "rounded-full font-semibold",
               disableClick
                 ? "px-2 py-0.5 text-[9px]"
                 : "px-2.5 py-1 text-[10px]",
-              isCompleted && "bg-green-500/10 text-green-500",
-              isPending && "bg-blue-500/10 text-blue-500",
-              isFailed && "bg-red-500/10 text-red-500",
-              isCancelled && "bg-gray-500/10 text-gray-500",
+              isCompleted &&
+                "bg-emerald-500/12 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400",
+              isPending &&
+                "bg-blue-500/10 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400",
+              isFailed &&
+                "bg-rose-500/12 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400",
+              isCancelled &&
+                "bg-zinc-400/15 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-400",
             )}
           >
             {isCompleted && "Completed"}

@@ -76,7 +76,7 @@ export function NotificationItemView({
               className={cn(
                 "mt-2 rounded-lg px-3 py-1 text-[12px] font-semibold transition-all",
                 notification.status === "failed"
-                  ? "bg-red-500/10 text-red-600 hover:bg-red-500/15 dark:text-red-400"
+                  ? "bg-rose-500/12 text-rose-700 hover:bg-rose-500/15 dark:text-rose-400"
                   : "bg-[#0071e3]/10 text-[#0071e3] hover:bg-[#0071e3]/15",
               )}
             >

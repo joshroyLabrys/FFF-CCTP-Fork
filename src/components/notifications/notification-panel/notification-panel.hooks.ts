@@ -10,12 +10,16 @@ import {
 } from "~/lib/notifications";
 import { BridgeStorage } from "~/lib/bridge/storage";
 import { useBridgeStore } from "~/lib/bridge";
+import { env } from "~/env";
+import { MOCK_ACTIVITY_NOTIFICATIONS } from "~/lib/mocks/activity-mocks";
 import type { NotificationPanelProps } from "./notification-panel.types";
 
 export function useNotificationPanelState({
   onNotificationAction,
 }: NotificationPanelProps) {
-  const notifications = useNotifications();
+  const realNotifications = useNotifications();
+  const useMock = env.NEXT_PUBLIC_USE_MOCK_ACTIVITY === "true";
+  const notifications = useMock ? MOCK_ACTIVITY_NOTIFICATIONS : realNotifications;
   const isOpen = useIsNotificationPanelOpen();
   const setIsOpen = useSetNotificationPanelOpen();
   const clearAll = useClearAllNotifications();
@@ -77,8 +81,8 @@ export function useNotificationPanelState({
   );
 
   const handleClearAll = useCallback(() => {
-    void clearAll();
-  }, [clearAll]);
+    if (!useMock) void clearAll();
+  }, [clearAll, useMock]);
 
   const handleClose = useCallback(() => {
     setIsOpen(false);
