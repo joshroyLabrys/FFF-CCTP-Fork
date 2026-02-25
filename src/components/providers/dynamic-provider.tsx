@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   DynamicContextProvider,
   FilterChain,
@@ -16,6 +16,7 @@ import {
   useDynamicWalletContext,
   DynamicWalletAdapter,
 } from "~/lib/wallet/providers/dynamic";
+import { getDynamicEvmNetworks } from "~/lib/wallet/providers/dynamic/evm-networks";
 import { WalletProviderRegistry } from "~/lib/wallet/provider-registry";
 
 /**
@@ -40,6 +41,8 @@ export const DynamicProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const evmNetworks = useMemo(() => getDynamicEvmNetworks(), []);
+
   return (
     <DynamicContextProvider
       settings={{
@@ -51,6 +54,7 @@ export const DynamicProvider = ({
           // SuiWalletConnectors,
         ],
         overrides: {
+          evmNetworks,
           views: [
             {
               type: "wallet-list",

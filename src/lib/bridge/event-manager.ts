@@ -175,20 +175,41 @@ export class BridgeEventManager {
     // So we need to advance the next step to in_progress here
     const stepOrder = ["approve", "burn", "attestation", "mint"];
     const currentIndex = stepOrder.indexOf(stepId);
-    if (currentIndex >= 0 && currentIndex < stepOrder.length - 1) {
-      const nextStepId = stepOrder[currentIndex + 1];
-      const nextStep = tx.steps.find((s) => s.id === nextStepId);
+    const nextStepId =
+      currentIndex >= 0 && currentIndex < stepOrder.length - 1
+        ? stepOrder[currentIndex + 1]
+        : null;
+    const nextStep = nextStepId
+      ? tx.steps.find((s) => s.id === nextStepId)
+      : null;
+    const shouldDelayAdvance =
+      stepId === "approve" && nextStepId === "burn" && nextStep?.status === "pending";
 
-      // Only advance if next step is pending (not already in_progress/completed)
-      if (nextStep?.status === "pending") {
-        nextStep.status = "in_progress";
-        nextStep.timestamp = Date.now();
-      }
+    if (nextStep?.status === "pending" && !shouldDelayAdvance) {
+      nextStep.status = "in_progress";
+      nextStep.timestamp = Date.now();
     }
 
     tx.updatedAt = Date.now();
     await this.storage.saveTransaction(tx);
 
     callback(tx);
+
+    // Wait minimum 3s before showing burn as in_progress so the approve tx can confirm (avoids race on fast networks)
+    if (shouldDelayAdvance) {
+      setTimeout(async () => {
+        if (this.cancelledTransactions.has(txId)) return;
+        const latest = await this.storage.getTransaction(txId);
+        if (!latest) return;
+        const burnStep = latest.steps.find((s) => s.id === "burn");
+        if (burnStep?.status === "pending") {
+          burnStep.status = "in_progress";
+          burnStep.timestamp = Date.now();
+          latest.updatedAt = Date.now();
+          await this.storage.saveTransaction(latest);
+          callback(latest);
+        }
+      }, 3000);
+    }
   }
 }

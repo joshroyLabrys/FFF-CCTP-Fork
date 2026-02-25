@@ -13,6 +13,7 @@ import {
   type SupportedChainId,
 } from "../networks";
 import { getViemChain } from "../chain-utils";
+import { wrapProviderWithMinGasFee } from "./evm-provider-gas-wrap";
 
 // Solana RPC endpoints
 const SOLANA_RPC_ENDPOINTS = {
@@ -127,8 +128,14 @@ export class EVMAdapterCreator implements IAdapterCreator {
       throw new Error("Failed to get EVM wallet client");
     }
 
+    const provider = wrapProviderWithMinGasFee(
+      providerResult as unknown as Parameters<
+        typeof createEvmAdapter
+      >[0]["provider"],
+    );
+
     return await createEvmAdapter({
-      provider: providerResult as unknown as Parameters<
+      provider: provider as unknown as Parameters<
         typeof createEvmAdapter
       >[0]["provider"],
     });
